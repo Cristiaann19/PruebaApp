@@ -1,0 +1,432 @@
+import React, { useState } from "react";
+import {
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
+import { Screen, Task } from "../types";
+import { useTheme } from "../context/ThemeContext";
+import { Icon } from "../components/common/Icon";
+import { BottomNav } from "../components/layout/BottomNav";
+import { TaskRow } from "../components/tasks/TaskRow";
+
+type HomeScreenProps = {
+    tasks: Task[];
+    navigate: (screen: Screen) => void;
+    toggle: (id: number) => void;
+};
+
+type FilterType = "Todas" | "Pendientes" | "Completadas";
+
+export function HomeScreen({ tasks, navigate, toggle }: HomeScreenProps) {
+    // Conectamos los colores dinámicos del Modo Claro / Oscuro
+    const { colors } = useTheme();
+
+    const [filter, setFilter] = useState<FilterType>("Todas");
+
+    // Cálculos en tiempo real del progreso
+    const completedCount = tasks.filter((task) => task.completed).length;
+    const totalCount = tasks.length;
+    const progressPercent = Math.round(
+        (completedCount / Math.max(totalCount, 1)) * 100
+    );
+
+    // Filtrado de tareas según la pestaña activa
+    const filteredTasks = tasks.filter((task) => {
+        if (filter === "Todas") return true;
+        if (filter === "Completadas") return task.completed;
+        return !task.completed;
+    });
+
+    return (
+        <View style={[styles.screenWrapper, { backgroundColor: colors.background }]}>
+            <ScrollView
+                style={styles.appScroll}
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* 1. Encabezado con saludo */}
+                <View style={styles.homeHeader}>
+                    <View>
+                        <Text style={styles.overline}>MI DÍA</Text>
+                        <Text style={[styles.greeting, { color: colors.text }]}>
+                            Hola, Cristian 👋
+                        </Text>
+                        <Text style={[styles.subtitle, { color: colors.subtext }]}>
+                            Aquí tienes tus tareas de hoy
+                        </Text>
+                    </View>
+
+                    <TouchableOpacity
+                        style={[
+                            styles.notificationBtn,
+                            { backgroundColor: colors.card, borderColor: colors.border },
+                        ]}
+                        accessibilityLabel="Notificaciones"
+                    >
+                        <Icon name="bell" size={22} color={colors.text} />
+                        <View style={styles.notificationDot} />
+                    </TouchableOpacity>
+                </View>
+
+                {/* 2. Tarjeta morada de progreso */}
+                <View style={styles.progressCard}>
+                    <View style={styles.progressHeader}>
+                        <Text style={styles.progressLabel}>Progreso de hoy</Text>
+                        <Text style={styles.progressValue}>{progressPercent}%</Text>
+                    </View>
+                    <Text style={styles.progressSubtext}>
+                        ¡Sigue así! Cada tarea te acerca a tu meta.
+                    </Text>
+                    <View style={styles.progressTrack}>
+                        <View
+                            style={[styles.progressFill, { width: `${progressPercent}%` }]}
+                        />
+                    </View>
+                </View>
+
+                {/* 3. Cuadrícula de resumen (Total, Completadas, Pendientes) */}
+                <View style={styles.statGrid}>
+                    <View
+                        style={[
+                            styles.statCard,
+                            { backgroundColor: colors.card, borderColor: colors.border },
+                        ]}
+                    >
+                        <View style={[styles.statIconWrap, { backgroundColor: "#EEF2FF" }]}>
+                            <Icon name="calendar" size={18} color="#6254F5" />
+                        </View>
+                        <Text style={[styles.statNumber, { color: colors.text }]}>
+                            {totalCount}
+                        </Text>
+                        <Text style={[styles.statLabel, { color: colors.subtext }]}>
+                            Total
+                        </Text>
+                    </View>
+
+                    <View
+                        style={[
+                            styles.statCard,
+                            { backgroundColor: colors.card, borderColor: colors.border },
+                        ]}
+                    >
+                        <View style={[styles.statIconWrap, { backgroundColor: "#DCFCE7" }]}>
+                            <Icon name="check" size={18} color="#16A34A" />
+                        </View>
+                        <Text style={[styles.statNumber, { color: colors.text }]}>
+                            {completedCount}
+                        </Text>
+                        <Text style={[styles.statLabel, { color: colors.subtext }]}>
+                            Completadas
+                        </Text>
+                    </View>
+
+                    <View
+                        style={[
+                            styles.statCard,
+                            { backgroundColor: colors.card, borderColor: colors.border },
+                        ]}
+                    >
+                        <View style={[styles.statIconWrap, { backgroundColor: "#FEF3C7" }]}>
+                            <Icon name="clock" size={18} color="#D97706" />
+                        </View>
+                        <Text style={[styles.statNumber, { color: colors.text }]}>
+                            {totalCount - completedCount}
+                        </Text>
+                        <Text style={[styles.statLabel, { color: colors.subtext }]}>
+                            Pendientes
+                        </Text>
+                    </View>
+                </View>
+
+                {/* 4. Lista de tareas y filtros */}
+                <View style={styles.tasksSection}>
+                    <View style={styles.sectionTitleRow}>
+                        <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                            Mis tareas
+                        </Text>
+                        <Text style={[styles.sectionCount, { color: colors.subtext }]}>
+                            {filteredTasks.length} tareas
+                        </Text>
+                    </View>
+
+                    <View style={styles.filtersRow}>
+                        {(["Todas", "Pendientes", "Completadas"] as const).map((item) => {
+                            const isActive = filter === item;
+                            return (
+                                <TouchableOpacity
+                                    key={item}
+                                    style={[
+                                        styles.filterChip,
+                                        { backgroundColor: colors.card, borderColor: colors.border },
+                                        isActive && styles.filterChipActive,
+                                    ]}
+                                    onPress={() => setFilter(item)}
+                                >
+                                    <Text
+                                        style={[
+                                            styles.filterChipText,
+                                            { color: colors.subtext },
+                                            isActive && styles.filterChipTextActive,
+                                        ]}
+                                    >
+                                        {item}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </View>
+
+                    {/* CORRECCIÓN DE KEY: Usamos task.id y, si viniera vacío, un respaldo con el index */}
+                    <View style={styles.taskList}>
+                        {filteredTasks.length > 0 ? (
+                            filteredTasks.map((task, index) => (
+                                <TaskRow
+                                    key={task.id !== undefined ? String(task.id) : `task-${index}`}
+                                    task={task}
+                                    toggle={toggle}
+                                />
+                            ))
+                        ) : (
+                            <View
+                                style={[
+                                    styles.emptyState,
+                                    { backgroundColor: colors.card, borderColor: colors.border },
+                                ]}
+                            >
+                                <View style={styles.emptyIconCircle}>
+                                    <Icon name="check" size={28} color="#6254F5" />
+                                </View>
+                                <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                                    Todo despejado
+                                </Text>
+                                <Text style={[styles.emptySubtitle, { color: colors.subtext }]}>
+                                    No hay tareas en esta vista.
+                                </Text>
+                            </View>
+                        )}
+                    </View>
+                </View>
+            </ScrollView>
+
+            <TouchableOpacity
+                style={styles.fab}
+                activeOpacity={0.85}
+                onPress={() => navigate("create")}
+                accessibilityLabel="Crear tarea"
+            >
+                <Icon name="plus" size={26} color="#FFFFFF" />
+            </TouchableOpacity>
+
+            <BottomNav active="home" navigate={navigate} />
+        </View>
+    );
+}
+
+const styles = StyleSheet.create({
+    screenWrapper: {
+        flex: 1,
+    },
+    appScroll: {
+        flex: 1,
+    },
+    scrollContent: {
+        paddingHorizontal: 20,
+        paddingTop: 16,
+        paddingBottom: 90,
+    },
+    homeHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 20,
+    },
+    overline: {
+        fontSize: 11,
+        fontWeight: "800",
+        color: "#6254F5",
+        letterSpacing: 1,
+        marginBottom: 4,
+    },
+    greeting: {
+        fontSize: 24,
+        fontWeight: "800",
+    },
+    subtitle: {
+        fontSize: 14,
+        marginTop: 2,
+    },
+    notificationBtn: {
+        width: 44,
+        height: 44,
+        borderRadius: 14,
+        alignItems: "center",
+        justifyContent: "center",
+        borderWidth: 1,
+    },
+    notificationDot: {
+        position: "absolute",
+        top: 10,
+        right: 11,
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: "#EF4444",
+    },
+    progressCard: {
+        backgroundColor: "#6254F5",
+        borderRadius: 22,
+        padding: 20,
+        marginBottom: 18,
+        elevation: 4,
+        shadowColor: "#6254F5",
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.25,
+        shadowRadius: 10,
+    },
+    progressHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 6,
+    },
+    progressLabel: {
+        color: "rgba(255, 255, 255, 0.9)",
+        fontSize: 14,
+        fontWeight: "600",
+    },
+    progressValue: {
+        color: "#FFFFFF",
+        fontSize: 24,
+        fontWeight: "800",
+    },
+    progressSubtext: {
+        color: "rgba(255, 255, 255, 0.8)",
+        fontSize: 13,
+        marginBottom: 14,
+    },
+    progressTrack: {
+        height: 8,
+        backgroundColor: "rgba(255, 255, 255, 0.25)",
+        borderRadius: 4,
+        overflow: "hidden",
+    },
+    progressFill: {
+        height: "100%",
+        backgroundColor: "#FFFFFF",
+        borderRadius: 4,
+    },
+    statGrid: {
+        flexDirection: "row",
+        gap: 10,
+        marginBottom: 24,
+    },
+    statCard: {
+        flex: 1,
+        borderRadius: 16,
+        padding: 14,
+        alignItems: "flex-start",
+        borderWidth: 1,
+    },
+    statIconWrap: {
+        width: 34,
+        height: 34,
+        borderRadius: 10,
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: 10,
+    },
+    statNumber: {
+        fontSize: 20,
+        fontWeight: "800",
+    },
+    statLabel: {
+        fontSize: 12,
+        marginTop: 2,
+    },
+    tasksSection: {
+        flex: 1,
+    },
+    sectionTitleRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 12,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: "800",
+    },
+    sectionCount: {
+        fontSize: 13,
+        fontWeight: "600",
+    },
+    filtersRow: {
+        flexDirection: "row",
+        gap: 8,
+        marginBottom: 16,
+    },
+    filterChip: {
+        paddingVertical: 8,
+        paddingHorizontal: 14,
+        borderRadius: 20,
+        borderWidth: 1,
+    },
+    filterChipActive: {
+        backgroundColor: "#6254F5",
+        borderColor: "#6254F5",
+    },
+    filterChipText: {
+        fontSize: 13,
+        fontWeight: "600",
+    },
+    filterChipTextActive: {
+        color: "#FFFFFF",
+    },
+    taskList: {
+        marginTop: 4,
+    },
+    emptyState: {
+        alignItems: "center",
+        justifyContent: "center",
+        borderRadius: 18,
+        paddingVertical: 36,
+        paddingHorizontal: 20,
+        borderWidth: 1,
+    },
+    emptyIconCircle: {
+        width: 54,
+        height: 54,
+        borderRadius: 27,
+        backgroundColor: "#EEF2FF",
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: 12,
+    },
+    emptyTitle: {
+        fontSize: 16,
+        fontWeight: "700",
+        marginBottom: 4,
+    },
+    emptySubtitle: {
+        fontSize: 13,
+    },
+    fab: {
+        position: "absolute",
+        right: 20,
+        bottom: 82,
+        width: 54,
+        height: 54,
+        borderRadius: 27,
+        backgroundColor: "#6254F5",
+        alignItems: "center",
+        justifyContent: "center",
+        elevation: 6,
+        shadowColor: "#6254F5",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.35,
+        shadowRadius: 8,
+    },
+});
