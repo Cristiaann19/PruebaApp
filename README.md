@@ -1,0 +1,226 @@
+# Taskly — Task Management App
+
+> 🇪🇸 [Leer en español](./README.es.md)
+
+[![Expo](https://img.shields.io/badge/Expo-57-000020?logo=expo&logoColor=white)](https://expo.dev)
+[![React Native](https://img.shields.io/badge/React%20Native-0.86-61DAFB?logo=react&logoColor=black)](https://reactnative.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Java](https://img.shields.io/badge/Java-21-007396?logo=openjdk&logoColor=white)](https://openjdk.org)
+[![MySQL](https://img.shields.io/badge/MySQL-8-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./testing-app-movil/LICENSE)
+
+**Taskly** is a mobile task-management application that consumes a REST backend with
+persistent storage in MySQL. It is a straightforward, well-structured starting point
+for a productivity app: create tasks, browse them by date, mark them as completed and
+track your progress — all backed by a real database.
+
+This repository is a **monorepo** containing both the mobile client and the backend API.
+
+---
+
+## Design / Mockups
+
+The UI/UX is designed in Figma. You can review the mockups here:
+
+**[Taskly — Figma Design](https://www.figma.com/design/1svjRo8ZtfiJJimHohVV9J/Testing-App?t=A6wCqv2DzLz1jmvw-1)**
+
+---
+
+## Features
+
+| Status | Feature |
+| :---: | :--- |
+| ✅ | Splash screen and animated onboarding flow |
+| ✅ | Login screen (currently **simulated**, without credential validation) |
+| ✅ | Task list loaded from the MySQL database |
+| ✅ | Create new tasks (persisted via the REST API) |
+| ✅ | Mark tasks as completed / pending (toggle) |
+| ✅ | Calendar view |
+| ✅ | Statistics screen |
+| ✅ | Settings with light / dark theme |
+| 🚧 | Per-user validated login |
+| 🚧 | Delete tasks from the UI (endpoint already exists on the backend) |
+
+---
+
+## Architecture
+
+```
+┌────────────────────┐        REST / JSON        ┌──────────────────┐        JPA        ┌─────────┐
+│  Mobile (Expo/RN)  │  ⇄  /api/tasks  ⇄         │  Spring Boot API │  ⇄             ⇄  │  MySQL  │
+└────────────────────┘                           └──────────────────┘                   └─────────┘
+```
+
+The mobile app consumes `http://<server-ip>:8080/api/tasks`. Navigation is state-driven
+inside `App.tsx`, and tasks are fetched on startup and kept in sync with the server on
+every mutation.
+
+---
+
+## Tech Stack
+
+### Mobile (`testing-app-movil/`)
+
+| Technology | Version | Purpose |
+| :--- | :--- | :--- |
+| Expo | SDK 57 | Development platform and tooling |
+| React Native | 0.86.3 | Cross-platform UI |
+| React | 19.2.3 | UI library |
+| TypeScript | ~6.0 | Static typing |
+| react-native-svg | 15.15.4 | Icons |
+| AsyncStorage | 2.2.0 | Local persistence |
+| expo-status-bar | ~57.0.1 | Status bar control |
+
+### Backend (`testing/`)
+
+| Technology | Version | Purpose |
+| :--- | :--- | :--- |
+| Spring Boot | 4.1.1 | REST API framework |
+| Java | 21 | Language runtime |
+| Spring Data JPA | (managed) | Data access layer |
+| MySQL | 8 | Relational database |
+| Lombok | (managed) | Boilerplate reduction |
+| Maven | wrapper (`mvnw`) | Build tool |
+
+---
+
+## Repository Structure
+
+```
+testing-app/
+├── testing-app-movil/          # Expo / React Native mobile client
+│   ├── App.tsx                 # Entry point and state-driven navigation
+│   ├── src/
+│   │   ├── components/         # Reusable UI components
+│   │   ├── constants/          # Initial/sample data
+│   │   ├── context/            # Theme (light/dark) context
+│   │   ├── screens/            # Splash, Onboarding, Login, Home, CreateTask...
+│   │   ├── services/           # TaskService (REST client)
+│   │   ├── types/              # Shared TypeScript types
+│   │   └── utils/              # Date helpers
+│   └── package.json
+│
+└── testing/                    # Spring Boot backend
+    ├── src/main/java/com/example/testing/
+    │   ├── Controller/         # TaskController (REST endpoints)
+    │   ├── Model/              # Task entity
+    │   ├── Repository/         # TaskRepository (JPA)
+    │   ├── Service/            # TaskService (business logic)
+    │   └── config/             # DataInitializer (seed data)
+    ├── src/main/resources/
+    │   └── application.properties
+    └── pom.xml
+```
+
+---
+
+## API Endpoints
+
+Base URL: `/api/tasks`
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/tasks` | List all tasks (ordered by date and time) |
+| `GET` | `/api/tasks/{id}` | Get a single task by ID |
+| `POST` | `/api/tasks` | Create a new task |
+| `PUT` | `/api/tasks/{id}` | Update an existing task |
+| `PATCH` | `/api/tasks/{id}/toggle` | Toggle completed / pending |
+| `DELETE` | `/api/tasks/{id}` | Delete a task |
+
+---
+
+## Data Model
+
+`Task` entity (`tasks` table):
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `id` | `Long` | Auto-generated primary key |
+| `title` | `String` | Task title (required) |
+| `description` | `String` | Optional details |
+| `date` | `LocalDate` | Due date (required) |
+| `time` | `LocalTime` | Due time (required) |
+| `priority` | `String` | `Baja` \| `Media` \| `Alta` |
+| `category` | `String` | `General` \| `Estudio` \| `Trabajo` \| `Personal` |
+| `completed` | `boolean` | Completion state |
+| `repeat` | `boolean` | Recurring task flag |
+
+---
+
+## Prerequisites
+
+- **Node.js** 18+ and npm
+- **Expo** tooling (`npx expo`)
+- **JDK 21**
+- **Maven** (the `mvnw` wrapper is included)
+- **MySQL** 8 running locally
+
+---
+
+## Getting Started
+
+### 1. Backend (Spring Boot + MySQL)
+
+Create the database:
+
+```sql
+CREATE DATABASE taskly_db;
+```
+
+Configure the connection in `testing/src/main/resources/application.properties`:
+
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/taskly_db?useSSL=false&serverTimezone=UTC
+spring.datasource.username=root
+spring.datasource.password=YOUR_PASSWORD
+```
+
+Run the API:
+
+```bash
+cd testing
+./mvnw spring-boot:run
+```
+
+The server starts on `http://localhost:8080`. On first run, `DataInitializer` seeds
+5 sample tasks into the database.
+
+### 2. Mobile app (Expo)
+
+Install dependencies and set the backend IP the app should reach. In
+`testing-app-movil/src/services/TaskService.ts`:
+
+```ts
+const SERVER_IP = "192.168.100.11"; // <-- use your machine's LAN IP
+```
+
+Then start the app:
+
+```bash
+cd testing-app-movil
+npm install
+npx expo start
+```
+
+> The phone/emulator must be on the same network as the backend and able to reach
+> port `8080`. Use your machine's LAN IP (not `localhost`) so a physical device can
+> connect.
+
+---
+
+## Roadmap
+
+Planned and upcoming work:
+
+- [ ] **Per-user validated login** — real authentication instead of the current simulation.
+- [ ] **Delete tasks from the UI** — the backend endpoint already exists; wire it into the app.
+- [ ] Task editing and better filtering / search.
+- [ ] Notifications and reminders for scheduled tasks.
+- [ ] Multi-user support.
+
+---
+
+## License
+
+Distributed under the MIT License. See [`testing-app-movil/LICENSE`](./testing-app-movil/LICENSE) for details.
