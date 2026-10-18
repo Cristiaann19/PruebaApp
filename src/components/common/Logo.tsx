@@ -1,6 +1,7 @@
 // src/components/common/Logo.tsx
 import React from "react";
 import {StyleSheet, Text, View} from "react-native";
+import {useTheme} from "../../context/ThemeContext";
 import {Icon} from "./Icon";
 
 type LogoProps = {
@@ -9,6 +10,7 @@ type LogoProps = {
 };
 
 export function Logo({compact = false, light = false}: LogoProps) {
+    const {colors} = useTheme();
     return (
         <View style={styles.brand}>
             <View
@@ -29,6 +31,7 @@ export function Logo({compact = false, light = false}: LogoProps) {
                     styles.brandText,
                     compact ? styles.textCompact : styles.textNormal,
                     light && styles.textLight,
+                    !light && {color: colors.text},
                 ]}
             >
                 Taskly

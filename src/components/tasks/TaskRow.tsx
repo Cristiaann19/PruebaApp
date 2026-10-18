@@ -1,10 +1,11 @@
 // src/components/tasks/TaskRow.tsx
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Task } from "../../types";
-import { isoDate, today, tomorrow } from "../../utils/dateUtils";
-import { Icon } from "../common/Icon";
-import { PriorityPill } from "./PriorityPill";
+import {StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import {Task} from "../../types";
+import {isoDate, today, tomorrow} from "../../utils/dateUtils";
+import {useTheme} from "../../context/ThemeContext";
+import {Icon} from "../common/Icon";
+import {PriorityPill} from "./PriorityPill";
 
 type TaskRowProps = {
     task: Task;
@@ -34,7 +35,9 @@ function formatTaskDate(dateStr: string): string {
     return dateStr;
 }
 
-export function TaskRow({ task, toggle, compact = false }: TaskRowProps) {
+export function TaskRow({task, toggle, compact = false}: TaskRowProps) {
+    const {colors} = useTheme();
+
     // Color del punto indicador cuando está en modo compacto (Calendario)
     const dotColor =
         task.priority === "Alta"
@@ -47,137 +50,138 @@ export function TaskRow({ task, toggle, compact = false }: TaskRowProps) {
         <View
             style={[
                 styles.taskRow,
-            task.completed && styles.taskRowCompleted,
-            compact && styles.taskRowCompact,
-]}
->
-    {/* Lado izquierdo: Checkbox interactivo (en Inicio) o punto de color (en Calendario) */}
-    {toggle ? (
-        <TouchableOpacity
-            style={[
-                styles.taskCheck,
-            task.completed && styles.taskCheckCompleted,
-    ]}
-        onPress={() => toggle(task.id)}
-        accessibilityLabel={
-                task.completed ? "Marcar como pendiente" : "Completar tarea"
-            }
-            >
-            {task.completed && <Icon name="check" size={14} color="#FFFFFF" />}
-            </TouchableOpacity>
-    ) : (
-        <View style={[styles.priorityDot, { backgroundColor: dotColor }]} />
-    )}
-
-    {/* Centro: Título de la tarea y metadatos (fecha y hora) */}
-    <View style={styles.taskMain}>
-    <Text
-        style={[
-            styles.taskTitle,
-        task.completed && styles.taskTitleCompleted,
-]}
-    numberOfLines={1}
+                {backgroundColor: colors.card, borderColor: colors.border},
+                task.completed && [styles.taskRowCompleted, {backgroundColor: colors.primarySoft}],
+                compact && styles.taskRowCompact,
+            ]}
         >
-        {task.title}
-        </Text>
+            {/* Lado izquierdo: Checkbox interactivo (en Inicio) o punto de color (en Calendario) */}
+            {toggle ? (
+                <TouchableOpacity
+                    style={[
+                        styles.taskCheck,
+                        {borderColor: colors.subtext},
+                        task.completed && styles.taskCheckCompleted,
+                    ]}
+                    onPress={() => toggle(task.id)}
+                    accessibilityLabel={
+                        task.completed ? "Marcar como pendiente" : "Completar tarea"
+                    }
+                >
+                    {task.completed && <Icon name="check" size={14} color="#FFFFFF"/>}
+                </TouchableOpacity>
+            ) : (
+                <View style={[styles.priorityDot, {backgroundColor: dotColor}]}/>
+            )}
 
-        <View style={styles.taskMeta}>
-    <View style={styles.metaItem}>
-    <Icon name="calendar" size={13} color="#94A3B8" />
-    <Text style={styles.metaText}>{formatTaskDate(task.date)}</Text>
-    </View>
+            {/* Centro: Título de la tarea y metadatos (fecha y hora) */}
+            <View style={styles.taskMain}>
+                <Text
+                    style={[
+                        styles.taskTitle,
+                        {color: colors.text},
+                        task.completed && styles.taskTitleCompleted,
+                    ]}
+                    numberOfLines={1}
+                >
+                    {task.title}
+                </Text>
 
-    <View style={styles.metaItem}>
-    <Icon name="clock" size={13} color="#94A3B8" />
-    <Text style={styles.metaText}>{task.time}</Text>
-        </View>
-        </View>
-        </View>
+                <View style={styles.taskMeta}>
+                    <View style={styles.metaItem}>
+                        <Icon name="calendar" size={13} color={colors.subtext}/>
+                        <Text style={[styles.metaText, {color: colors.subtext}]}>
+                            {formatTaskDate(task.date)}
+                        </Text>
+                    </View>
 
-    {/* Lado derecho: Etiqueta de prioridad y botón de más opciones (solo en vista normal) */}
-    {!compact && <PriorityPill priority={task.priority} />}
+                    <View style={styles.metaItem}>
+                        <Icon name="clock" size={13} color={colors.subtext}/>
+                        <Text style={[styles.metaText, {color: colors.subtext}]}>
+                            {task.time}
+                        </Text>
+                    </View>
+                </View>
+            </View>
 
-        {!compact && (
-            <TouchableOpacity
-                style={styles.moreButton}
-            accessibilityLabel="Más opciones"
-            >
-            <Icon name="more" size={18} color="#94A3B8" />
-            </TouchableOpacity>
-        )}
+            {/* Lado derecho: Etiqueta de prioridad y botón de más opciones (solo en vista normal) */}
+            {!compact && <PriorityPill priority={task.priority}/>}
+
+            {!compact && (
+                <TouchableOpacity
+                    style={styles.moreButton}
+                    accessibilityLabel="Más opciones"
+                >
+                    <Icon name="more" size={18} color={colors.subtext}/>
+                </TouchableOpacity>
+            )}
         </View>
     );
-    }
+}
 
-    const styles = StyleSheet.create({
-        taskRow: {
-            flexDirection: "row",
-            alignItems: "center",
-            backgroundColor: "#FFFFFF",
-            paddingVertical: 14,
-            paddingHorizontal: 14,
-            borderRadius: 16,
-            marginBottom: 10,
-            borderWidth: 1,
-            borderColor: "#F1F5F9",
-        },
-        taskRowCompleted: {
-            opacity: 0.65,
-            backgroundColor: "#F8FAFC",
-        },
-        taskRowCompact: {
-            paddingVertical: 12,
-        },
-        taskCheck: {
-            width: 24,
-            height: 24,
-            borderRadius: 8,
-            borderWidth: 2,
-            borderColor: "#CBD5E1",
-            alignItems: "center",
-            justifyContent: "center",
-            marginRight: 12,
-        },
-        taskCheckCompleted: {
-            backgroundColor: "#6254F5",
-            borderColor: "#6254F5",
-        },
-        priorityDot: {
-            width: 10,
-            height: 10,
-            borderRadius: 5,
-            marginRight: 12,
-        },
-        taskMain: {
-            flex: 1,
-            marginRight: 8,
-        },
-        taskTitle: {
-            fontSize: 15,
-            fontWeight: "700",
-            color: "#1E1E2D",
-            marginBottom: 4,
-        },
-        taskTitleCompleted: {
-            textDecorationLine: "line-through",
-            color: "#94A3B8",
-        },
-        taskMeta: {
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 12,
-        },
-        metaItem: {
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 4,
-        },
-        metaText: {
-            fontSize: 12,
-            color: "#64748B",
-            fontWeight: "500",
-        },
-        moreButton: {
-            padding: 4,
-        },
-    });
+const styles = StyleSheet.create({
+    taskRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingVertical: 14,
+        paddingHorizontal: 14,
+        borderRadius: 16,
+        marginBottom: 10,
+        borderWidth: 1,
+    },
+    taskRowCompleted: {
+        opacity: 0.65,
+    },
+    taskRowCompact: {
+        paddingVertical: 12,
+    },
+    taskCheck: {
+        width: 24,
+        height: 24,
+        borderRadius: 8,
+        borderWidth: 2,
+        alignItems: "center",
+        justifyContent: "center",
+        marginRight: 12,
+    },
+    taskCheckCompleted: {
+        backgroundColor: "#6254F5",
+        borderColor: "#6254F5",
+    },
+    priorityDot: {
+        width: 10,
+        height: 10,
+        borderRadius: 5,
+        marginRight: 12,
+    },
+    taskMain: {
+        flex: 1,
+        marginRight: 8,
+    },
+    taskTitle: {
+        fontSize: 15,
+        fontWeight: "700",
+        marginBottom: 4,
+    },
+    taskTitleCompleted: {
+        textDecorationLine: "line-through",
+        color: "#94A3B8",
+    },
+    taskMeta: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+    },
+    metaItem: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 4,
+    },
+    metaText: {
+        fontSize: 12,
+        fontWeight: "500",
+    },
+    moreButton: {
+        padding: 4,
+    },
+});

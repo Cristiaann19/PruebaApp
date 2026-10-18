@@ -2,6 +2,7 @@
 import React from "react";
 import {StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {Screen} from "../../types";
+import {useTheme} from "../../context/ThemeContext";
 import {Icon} from "../common/Icon";
 
 // Propiedades que recibe la barra de navegación
@@ -20,8 +21,15 @@ const navItems: { key: Screen; icon: string; label: string }[] = [
 ];
 
 export function BottomNav({active, navigate}: BottomNavProps) {
+    const {colors} = useTheme();
     return (
-        <View style={styles.bottomNav} accessibilityRole="tablist">
+        <View
+            style={[
+                styles.bottomNav,
+                {backgroundColor: colors.card, borderTopColor: colors.border},
+            ]}
+            accessibilityRole="tablist"
+        >
             {navItems.map((item) => {
                 const isActive = active === item.key;
                 const isAddButton = item.key === "create";
@@ -39,6 +47,7 @@ export function BottomNav({active, navigate}: BottomNavProps) {
                                 styles.navIcon,
                                 isAddButton && styles.navAddIcon,
                                 isActive && !isAddButton && styles.navIconActive,
+                                isActive && !isAddButton && {backgroundColor: colors.primarySoft},
                             ]}
                         >
                             <Icon
@@ -48,8 +57,8 @@ export function BottomNav({active, navigate}: BottomNavProps) {
                                     isAddButton
                                         ? "#FFFFFF"
                                         : isActive
-                                            ? "#6254F5"
-                                            : "#94A3B8"
+                                            ? colors.primary
+                                            : colors.subtext
                                 }
                             />
                         </View>
@@ -58,7 +67,9 @@ export function BottomNav({active, navigate}: BottomNavProps) {
                         <Text
                             style={[
                                 styles.navLabel,
+                                {color: colors.subtext},
                                 isActive && styles.navLabelActive,
+                                isActive && {color: colors.primary},
                                 isAddButton && styles.navLabelAdd,
                             ]}
                         >

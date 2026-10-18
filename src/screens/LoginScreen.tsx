@@ -15,12 +15,14 @@ import {Field} from "../components/common/Field";
 import {Icon} from "../components/common/Icon";
 import {Logo} from "../components/common/Logo";
 import {Modal} from "../components/common/Modal";
+import {useTheme} from "../context/ThemeContext";
 
 type LoginScreenProps = {
     enter: () => void; // Función que navega hacia la pantalla principal ("home")
 };
 
 export function LoginScreen({enter}: LoginScreenProps) {
+    const {colors} = useTheme();
     // Estados del formulario de inicio de sesión
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState("");
@@ -45,9 +47,11 @@ export function LoginScreen({enter}: LoginScreenProps) {
 
                 {/* Encabezado de bienvenida */}
                 <View style={styles.loginHeading}>
-                    <Text style={styles.eyebrow}>BIENVENIDO DE NUEVO</Text>
-                    <Text style={styles.title}>Inicia sesión</Text>
-                    <Text style={styles.subtitle}>
+                    <Text style={[styles.eyebrow, {color: colors.primary}]}>
+                        BIENVENIDO DE NUEVO
+                    </Text>
+                    <Text style={[styles.title, {color: colors.text}]}>Inicia sesión</Text>
+                    <Text style={[styles.subtitle, {color: colors.subtext}]}>
                         Continúa organizando tu día con Taskly.
                     </Text>
                 </View>
@@ -56,11 +60,11 @@ export function LoginScreen({enter}: LoginScreenProps) {
                 <View style={styles.loginForm}>
                     <Field label="Correo electrónico" icon="mail">
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, {color: colors.text}]}
                             value={email}
                             onChangeText={setEmail}
                             placeholder="tu@email.com"
-                            placeholderTextColor="#94A3B8"
+                            placeholderTextColor={colors.subtext}
                             keyboardType="email-address"
                             autoCapitalize="none"
                         />
@@ -68,12 +72,12 @@ export function LoginScreen({enter}: LoginScreenProps) {
 
                     <Field label="Contraseña" icon="lock">
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, {color: colors.text}]}
                             value={password}
                             onChangeText={setPassword}
                             secureTextEntry={!showPassword}
                             placeholder="Tu contraseña"
-                            placeholderTextColor="#94A3B8"
+                            placeholderTextColor={colors.subtext}
                         />
                         <TouchableOpacity
                             onPress={() => setShowPassword(!showPassword)}
@@ -85,13 +89,15 @@ export function LoginScreen({enter}: LoginScreenProps) {
                             <Icon
                                 name="eye"
                                 size={19}
-                                color={showPassword ? "#6254F5" : "#94A3B8"}
+                                color={showPassword ? colors.primary : colors.subtext}
                             />
                         </TouchableOpacity>
                     </Field>
 
                     <TouchableOpacity style={styles.forgotBtn}>
-                        <Text style={styles.forgotText}>¿Olvidaste tu contraseña?</Text>
+                        <Text style={[styles.forgotText, {color: colors.primary}]}>
+                            ¿Olvidaste tu contraseña?
+                        </Text>
                     </TouchableOpacity>
 
                     <Button full onClick={enter}>
@@ -101,9 +107,11 @@ export function LoginScreen({enter}: LoginScreenProps) {
 
                 {/* Separador visual */}
                 <View style={styles.separator}>
-                    <View style={styles.separatorLine}/>
-                    <Text style={styles.separatorText}>o continúa con</Text>
-                    <View style={styles.separatorLine}/>
+                    <View style={[styles.separatorLine, {backgroundColor: colors.border}]}/>
+                    <Text style={[styles.separatorText, {color: colors.subtext}]}>
+                        o continúa con
+                    </Text>
+                    <View style={[styles.separatorLine, {backgroundColor: colors.border}]}/>
                 </View>
 
                 {/* Botones de redes sociales */}
@@ -118,9 +126,13 @@ export function LoginScreen({enter}: LoginScreenProps) {
 
                 {/* Enlace para abrir el modal de registro */}
                 <View style={styles.signupRow}>
-                    <Text style={styles.signupText}>¿No tienes una cuenta? </Text>
+                    <Text style={[styles.signupText, {color: colors.subtext}]}>
+                        ¿No tienes una cuenta?{" "}
+                    </Text>
                     <TouchableOpacity onPress={() => setRegister(true)}>
-                        <Text style={styles.signupLink}>Regístrate</Text>
+                        <Text style={[styles.signupLink, {color: colors.primary}]}>
+                            Regístrate
+                        </Text>
                     </TouchableOpacity>
                 </View>
 
@@ -130,21 +142,21 @@ export function LoginScreen({enter}: LoginScreenProps) {
                         <View>
                             <Field label="Nombre completo" icon="user">
                                 <TextInput
-                                    style={styles.input}
+                                    style={[styles.input, {color: colors.text}]}
                                     value={regName}
                                     onChangeText={setRegName}
                                     placeholder="Tu nombre"
-                                    placeholderTextColor="#94A3B8"
+                                    placeholderTextColor={colors.subtext}
                                 />
                             </Field>
 
                             <Field label="Correo electrónico" icon="mail">
                                 <TextInput
-                                    style={styles.input}
+                                    style={[styles.input, {color: colors.text}]}
                                     value={regEmail}
                                     onChangeText={setRegEmail}
                                     placeholder="tu@email.com"
-                                    placeholderTextColor="#94A3B8"
+                                    placeholderTextColor={colors.subtext}
                                     keyboardType="email-address"
                                     autoCapitalize="none"
                                 />
@@ -152,12 +164,12 @@ export function LoginScreen({enter}: LoginScreenProps) {
 
                             <Field label="Contraseña" icon="lock">
                                 <TextInput
-                                    style={styles.input}
+                                    style={[styles.input, {color: colors.text}]}
                                     value={regPassword}
                                     onChangeText={setRegPassword}
                                     secureTextEntry
                                     placeholder="Mínimo 8 caracteres"
-                                    placeholderTextColor="#94A3B8"
+                                    placeholderTextColor={colors.subtext}
                                 />
                             </Field>
 

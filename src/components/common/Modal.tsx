@@ -7,6 +7,7 @@ import {
     Text,
     View,
 } from "react-native";
+import {useTheme} from "../../context/ThemeContext";
 
 type ModalProps = {
     title: string;
@@ -15,6 +16,7 @@ type ModalProps = {
 };
 
 export function Modal({title, children, close}: ModalProps) {
+    const {colors} = useTheme();
     return (
         <RNModal
             transparent={true}
@@ -24,10 +26,13 @@ export function Modal({title, children, close}: ModalProps) {
         >
             {/* Fondo oscuro semitransparente; al tocarlo se cierra el modal */}
             <Pressable style={styles.modalBackdrop} onPress={close}>
-                {/* Contenedor blanco inferior; evita cerrarse si tocas dentro del formulario */}
-                <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
-                    <View style={styles.modalHandle}/>
-                    <Text style={styles.modalTitle}>{title}</Text>
+                {/* Contenedor inferior; evita cerrarse si tocas dentro del formulario */}
+                <Pressable
+                    style={[styles.modalCard, {backgroundColor: colors.card}]}
+                    onPress={(e) => e.stopPropagation()}
+                >
+                    <View style={[styles.modalHandle, {backgroundColor: colors.border}]}/>
+                    <Text style={[styles.modalTitle, {color: colors.text}]}>{title}</Text>
                     {children}
                 </Pressable>
             </Pressable>

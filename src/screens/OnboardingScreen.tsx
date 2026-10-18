@@ -5,6 +5,7 @@ import Svg, {Path} from "react-native-svg";
 import {Button} from "../components/common/Button";
 import {Icon} from "../components/common/Icon";
 import {Logo} from "../components/common/Logo";
+import {useTheme} from "../context/ThemeContext";
 
 // Datos de las 3 pantallas de introducción
 const onboardingData = [
@@ -29,20 +30,31 @@ const onboardingData = [
  * Subcomponente que dibuja la ilustración central según el tipo ("tasks", "reminders", "goals").
  */
 function OnboardingArt({kind}: { kind: string }) {
+    const {colors} = useTheme();
     return (
         <View style={styles.artContainer}>
             {/* Círculo suave de fondo */}
-            <View style={styles.artBlob}/>
+            <View style={[styles.artBlob, {backgroundColor: colors.primarySoft}]}/>
 
             {/* Ilustración 1: Hoja de tareas y reloj */}
             {kind === "tasks" && (
                 <View style={styles.artWrapper}>
-                    <View style={styles.paper}>
-                        <View style={styles.paperLine}/>
-                        <View style={[styles.paperLine, {width: "75%"}]}/>
-                        <View style={[styles.paperLine, {width: "55%"}]}/>
+                    <View style={[styles.paper, {backgroundColor: colors.card}]}>
+                        <View style={[styles.paperLine, {backgroundColor: colors.border}]}/>
+                        <View
+                            style={[
+                                styles.paperLine,
+                                {width: "75%", backgroundColor: colors.border},
+                            ]}
+                        />
+                        <View
+                            style={[
+                                styles.paperLine,
+                                {width: "55%", backgroundColor: colors.border},
+                            ]}
+                        />
                     </View>
-                    <View style={styles.floatingBadge}>
+                    <View style={[styles.floatingBadge, {backgroundColor: colors.card}]}>
                         <Icon name="clock" size={40} color="#6254F5"/>
                     </View>
                 </View>
@@ -51,10 +63,16 @@ function OnboardingArt({kind}: { kind: string }) {
             {/* Ilustración 2: Calendario y campana de notificación */}
             {kind === "reminders" && (
                 <View style={styles.artWrapper}>
-                    <View style={styles.calendarCard}>
+                    <View style={[styles.calendarCard, {backgroundColor: colors.card}]}>
                         <Icon name="calendar" size={76} color="#6254F5"/>
                     </View>
-                    <View style={[styles.floatingBadge, styles.bellBadge]}>
+                    <View
+                        style={[
+                            styles.floatingBadge,
+                            styles.bellBadge,
+                            {backgroundColor: colors.card},
+                        ]}
+                    >
                         <Icon name="bell" size={34} color="#F59E0B"/>
                     </View>
                 </View>
@@ -99,6 +117,7 @@ type OnboardingProps = {
 };
 
 export function OnboardingScreen({index, next, skip}: OnboardingProps) {
+    const {colors} = useTheme();
     const item = onboardingData[index] || onboardingData[0];
 
     return (
@@ -122,12 +141,19 @@ export function OnboardingScreen({index, next, skip}: OnboardingProps) {
                     {[0, 1, 2].map((dot) => (
                         <View
                             key={dot}
-                            style={[styles.dot, dot === index && styles.dotActive]}
+                            style={[
+                                styles.dot,
+                                {backgroundColor: colors.border},
+                                dot === index && styles.dotActive,
+                                dot === index && {backgroundColor: colors.primary},
+                            ]}
                         />
                     ))}
                 </View>
-                <Text style={styles.title}>{item.title}</Text>
-                <Text style={styles.description}>{item.text}</Text>
+                <Text style={[styles.title, {color: colors.text}]}>{item.title}</Text>
+                <Text style={[styles.description, {color: colors.subtext}]}>
+                    {item.text}
+                </Text>
             </View>
 
             {/* Botón inferior para avanzar */}

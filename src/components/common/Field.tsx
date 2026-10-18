@@ -1,6 +1,7 @@
 // src/components/common/Field.tsx
 import React, { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { useTheme } from "../../context/ThemeContext";
 import { Icon } from "./Icon";
 
 type FieldProps = {
@@ -11,16 +12,23 @@ type FieldProps = {
 };
 
 export function Field({ label, icon, error, children }: FieldProps) {
+    const { colors } = useTheme();
     return (
         <View style={styles.fieldWrap}>
             {/* Etiqueta superior del campo */}
-            {label && <Text style={styles.fieldLabel}>{label}</Text>}
+            {label && <Text style={[styles.fieldLabel, { color: colors.text }]}>{label}</Text>}
 
             {/* Caja del input con ícono opcional */}
-            <View style={[styles.fieldControl, error ? styles.hasError : null]}>
+            <View
+                style={[
+                    styles.fieldControl,
+                    { backgroundColor: colors.card, borderColor: colors.border },
+                    error ? styles.hasError : null,
+                ]}
+            >
                 {icon && (
                     <View style={styles.iconWrap}>
-                        <Icon name={icon} size={19} color="#94A3B8" />
+                        <Icon name={icon} size={19} color={colors.subtext} />
                     </View>
                 )}
                 <View style={styles.inputContainer}>{children}</View>

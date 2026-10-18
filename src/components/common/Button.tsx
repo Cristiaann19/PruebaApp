@@ -7,6 +7,7 @@ import {
     ViewStyle,
     StyleProp,
 } from "react-native";
+import {useTheme} from "../../context/ThemeContext";
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 
@@ -25,6 +26,20 @@ export function Button({
                            onClick,
                            style,
                        }: ButtonProps) {
+    const {colors} = useTheme();
+
+    const themedStyles: StyleProp<ViewStyle> =
+        variant === "secondary"
+            ? {backgroundColor: colors.card, borderColor: colors.border}
+            : undefined;
+
+    const themedText =
+        variant === "secondary"
+            ? colors.text
+            : variant === "ghost"
+                ? colors.subtext
+                : undefined;
+
     return (
         <TouchableOpacity
             activeOpacity={0.8}
@@ -32,12 +47,21 @@ export function Button({
             style={[
                 styles.btn,
                 styles[`btn_${variant}`],
+                themedStyles,
                 full && styles.full,
                 style,
             ]}
         >
             {/* Envolvemos los hijos en un Text con estilo acorde a la variante */}
-            <Text style={[styles.text, styles[`text_${variant}`]]}>{children}</Text>
+            <Text
+                style={[
+                    styles.text,
+                    styles[`text_${variant}`],
+                    themedText ? {color: themedText} : undefined,
+                ]}
+            >
+                {children}
+            </Text>
         </TouchableOpacity>
     );
 }

@@ -1,6 +1,7 @@
 // src/components/common/Header.tsx
 import React, {ReactNode} from "react";
 import {StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import {useTheme} from "../../context/ThemeContext";
 import {Icon} from "./Icon";
 
 type HeaderProps = {
@@ -11,21 +12,29 @@ type HeaderProps = {
 };
 
 export function Header({title, subtitle, back, action}: HeaderProps) {
+    const {colors} = useTheme();
     return (
         <View style={styles.screenHeader}>
             <View style={styles.leftRow}>
                 {back && (
                     <TouchableOpacity
-                        style={styles.iconButton}
+                        style={[
+                            styles.iconButton,
+                            {backgroundColor: colors.card, borderColor: colors.border},
+                        ]}
                         onPress={back}
                         accessibilityLabel="Volver"
                     >
-                        <Icon name="back" size={22} color="#1E1E2D"/>
+                        <Icon name="back" size={22} color={colors.text}/>
                     </TouchableOpacity>
                 )}
                 <View>
-                    <Text style={styles.title}>{title}</Text>
-                    {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+                    <Text style={[styles.title, {color: colors.text}]}>{title}</Text>
+                    {subtitle && (
+                        <Text style={[styles.subtitle, {color: colors.subtext}]}>
+                            {subtitle}
+                        </Text>
+                    )}
                 </View>
             </View>
             {action && <View style={styles.headerAction}>{action}</View>}

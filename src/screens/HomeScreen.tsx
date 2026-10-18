@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { Screen, Task } from "../types";
 import { Icon } from "../components/common/Icon";
+import { useTheme } from "../context/ThemeContext";
 import { BottomNav } from "../components/layout/BottomNav";
 import { TaskRow } from "../components/tasks/TaskRow";
 
@@ -21,6 +22,7 @@ type HomeScreenProps = {
 type FilterType = "Todas" | "Pendientes" | "Completadas";
 
 export function HomeScreen({ tasks, navigate, toggle }: HomeScreenProps) {
+    const { colors } = useTheme();
     // Estado para controlar qué filtro está activo
     const [filter, setFilter] = useState<FilterType>("Todas");
 
@@ -39,7 +41,7 @@ export function HomeScreen({ tasks, navigate, toggle }: HomeScreenProps) {
     });
 
     return (
-        <View style={styles.screenWrapper}>
+        <View style={[styles.screenWrapper, { backgroundColor: colors.background }]}>
             {/* Área deslizable con todo el contenido del inicio */}
             <ScrollView
                 style={styles.appScroll}
@@ -50,15 +52,22 @@ export function HomeScreen({ tasks, navigate, toggle }: HomeScreenProps) {
                 <View style={styles.homeHeader}>
                     <View>
                         <Text style={styles.overline}>MI DÍA</Text>
-                        <Text style={styles.greeting}>Hola, Cristian 👋</Text>
-                        <Text style={styles.subtitle}>Aquí tienes tus tareas de hoy</Text>
+                        <Text style={[styles.greeting, { color: colors.text }]}>
+                            Hola, Cristian 👋
+                        </Text>
+                        <Text style={[styles.subtitle, { color: colors.subtext }]}>
+                            Aquí tienes tus tareas de hoy
+                        </Text>
                     </View>
 
                     <TouchableOpacity
-                        style={styles.notificationBtn}
+                        style={[
+                            styles.notificationBtn,
+                            { backgroundColor: colors.card, borderColor: colors.border },
+                        ]}
                         accessibilityLabel="Notificaciones"
                     >
-                        <Icon name="bell" size={22} color="#1E1E2D" />
+                        <Icon name="bell" size={22} color={colors.text} />
                         <View style={styles.notificationDot} />
                     </TouchableOpacity>
                 </View>
@@ -81,36 +90,66 @@ export function HomeScreen({ tasks, navigate, toggle }: HomeScreenProps) {
 
                 {/* 3. Cuadrícula de 3 tarjetas de resumen (Total, Completadas, Pendientes) */}
                 <View style={styles.statGrid}>
-                    <View style={[styles.statCard, styles.statTotal]}>
+                    <View
+                        style={[
+                            styles.statCard,
+                            styles.statTotal,
+                            { backgroundColor: colors.card, borderColor: colors.border },
+                        ]}
+                    >
                         <View style={[styles.statIconWrap, { backgroundColor: "#EEF2FF" }]}>
                             <Icon name="calendar" size={18} color="#6254F5" />
                         </View>
-                        <Text style={styles.statNumber}>{totalCount}</Text>
-                        <Text style={styles.statLabel}>Total</Text>
+                        <Text style={[styles.statNumber, { color: colors.text }]}>
+                            {totalCount}
+                        </Text>
+                        <Text style={[styles.statLabel, { color: colors.subtext }]}>Total</Text>
                     </View>
 
-                    <View style={[styles.statCard, styles.statDone]}>
+                    <View
+                        style={[
+                            styles.statCard,
+                            styles.statDone,
+                            { backgroundColor: colors.card, borderColor: colors.border },
+                        ]}
+                    >
                         <View style={[styles.statIconWrap, { backgroundColor: "#DCFCE7" }]}>
                             <Icon name="check" size={18} color="#16A34A" />
                         </View>
-                        <Text style={styles.statNumber}>{completedCount}</Text>
-                        <Text style={styles.statLabel}>Completadas</Text>
+                        <Text style={[styles.statNumber, { color: colors.text }]}>
+                            {completedCount}
+                        </Text>
+                        <Text style={[styles.statLabel, { color: colors.subtext }]}>
+                            Completadas
+                        </Text>
                     </View>
 
-                    <View style={[styles.statCard, styles.statPending]}>
+                    <View
+                        style={[
+                            styles.statCard,
+                            styles.statPending,
+                            { backgroundColor: colors.card, borderColor: colors.border },
+                        ]}
+                    >
                         <View style={[styles.statIconWrap, { backgroundColor: "#FEF3C7" }]}>
                             <Icon name="clock" size={18} color="#D97706" />
                         </View>
-                        <Text style={styles.statNumber}>{totalCount - completedCount}</Text>
-                        <Text style={styles.statLabel}>Pendientes</Text>
+                        <Text style={[styles.statNumber, { color: colors.text }]}>
+                            {totalCount - completedCount}
+                        </Text>
+                        <Text style={[styles.statLabel, { color: colors.subtext }]}>
+                            Pendientes
+                        </Text>
                     </View>
                 </View>
 
                 {/* 4. Sección de lista de tareas y botones de filtro */}
                 <View style={styles.tasksSection}>
                     <View style={styles.sectionTitleRow}>
-                        <Text style={styles.sectionTitle}>Mis tareas</Text>
-                        <Text style={styles.sectionCount}>
+                        <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                            Mis tareas
+                        </Text>
+                        <Text style={[styles.sectionCount, { color: colors.subtext }]}>
                             {filteredTasks.length} tareas
                         </Text>
                     </View>
@@ -124,6 +163,7 @@ export function HomeScreen({ tasks, navigate, toggle }: HomeScreenProps) {
                                     key={item}
                                     style={[
                                         styles.filterChip,
+                                        { backgroundColor: colors.card, borderColor: colors.border },
                                         isActive && styles.filterChipActive,
                                     ]}
                                     onPress={() => setFilter(item)}
@@ -131,6 +171,7 @@ export function HomeScreen({ tasks, navigate, toggle }: HomeScreenProps) {
                                     <Text
                                         style={[
                                             styles.filterChipText,
+                                            { color: colors.subtext },
                                             isActive && styles.filterChipTextActive,
                                         ]}
                                     >
@@ -148,12 +189,19 @@ export function HomeScreen({ tasks, navigate, toggle }: HomeScreenProps) {
                                 <TaskRow key={task.id} task={task} toggle={toggle} />
                             ))
                         ) : (
-                            <View style={styles.emptyState}>
+                            <View
+                                style={[
+                                    styles.emptyState,
+                                    { backgroundColor: colors.card, borderColor: colors.border },
+                                ]}
+                            >
                                 <View style={styles.emptyIconCircle}>
                                     <Icon name="check" size={28} color="#6254F5" />
                                 </View>
-                                <Text style={styles.emptyTitle}>Todo despejado</Text>
-                                <Text style={styles.emptySubtitle}>
+                                <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                                    Todo despejado
+                                </Text>
+                                <Text style={[styles.emptySubtitle, { color: colors.subtext }]}>
                                     No hay tareas en esta vista.
                                 </Text>
                             </View>

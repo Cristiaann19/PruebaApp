@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import {Category, Priority, Task} from "../types";
 import {isoDate, today} from "../utils/dateUtils";
+import {useTheme} from "../context/ThemeContext";
 import {Button} from "../components/common/Button";
 import {Field} from "../components/common/Field";
 import {Header} from "../components/common/Header";
@@ -23,6 +24,7 @@ type CreateTaskScreenProps = {
 };
 
 export function CreateTaskScreen({addTask, cancel}: CreateTaskScreenProps) {
+    const {colors} = useTheme();
     // Estados para cada campo del formulario
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -54,7 +56,7 @@ export function CreateTaskScreen({addTask, cancel}: CreateTaskScreenProps) {
 
     return (
         <KeyboardAvoidingView
-            style={styles.screenWrapper}
+            style={[styles.screenWrapper, {backgroundColor: colors.background}]}
             behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
             <ScrollView
@@ -68,7 +70,7 @@ export function CreateTaskScreen({addTask, cancel}: CreateTaskScreenProps) {
                     back={cancel}
                     action={
                         <TouchableOpacity onPress={handleSubmit}>
-                            <Text style={styles.saveLink}>Guardar</Text>
+                            <Text style={[styles.saveLink, {color: colors.primary}]}>Guardar</Text>
                         </TouchableOpacity>
                     }
                 />
@@ -76,25 +78,25 @@ export function CreateTaskScreen({addTask, cancel}: CreateTaskScreenProps) {
                 {/* 1. Campo: Título de la tarea */}
                 <Field label="Título de la tarea" error={error}>
                     <TextInput
-                        style={styles.input}
+                        style={[styles.input, {color: colors.text}]}
                         value={title}
                         onChangeText={(text) => {
                             setTitle(text);
                             if (error) setError("");
                         }}
                         placeholder="Ej. Preparar presentación"
-                        placeholderTextColor="#94A3B8"
+                        placeholderTextColor={colors.subtext}
                     />
                 </Field>
 
                 {/* 2. Campo: Descripción opcional */}
                 <Field label="Descripción (opcional)">
                     <TextInput
-                        style={[styles.input, styles.textArea]}
+                        style={[styles.input, styles.textArea, {color: colors.text}]}
                         value={description}
                         onChangeText={setDescription}
                         placeholder="Añade notas o detalles..."
-                        placeholderTextColor="#94A3B8"
+                        placeholderTextColor={colors.subtext}
                         multiline
                         numberOfLines={3}
                         textAlignVertical="top"
@@ -105,28 +107,28 @@ export function CreateTaskScreen({addTask, cancel}: CreateTaskScreenProps) {
                 <View style={styles.formRow}>
                     <Field label="Fecha" icon="calendar">
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, {color: colors.text}]}
                             value={date}
                             onChangeText={setDate}
                             placeholder="AAAA-MM-DD"
-                            placeholderTextColor="#94A3B8"
+                            placeholderTextColor={colors.subtext}
                         />
                     </Field>
 
                     <Field label="Hora" icon="clock">
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, {color: colors.text}]}
                             value={time}
                             onChangeText={setTime}
                             placeholder="09:00"
-                            placeholderTextColor="#94A3B8"
+                            placeholderTextColor={colors.subtext}
                         />
                     </Field>
                 </View>
 
                 {/* 4. Selector de Prioridad (Baja, Media, Alta) */}
                 <View style={styles.fieldset}>
-                    <Text style={styles.legend}>Prioridad</Text>
+                    <Text style={[styles.legend, {color: colors.text}]}>Prioridad</Text>
                     <View style={styles.choiceGrid}>
                         {(["Baja", "Media", "Alta"] as Priority[]).map((item) => {
                             const isSelected = priority === item;
@@ -142,7 +144,12 @@ export function CreateTaskScreen({addTask, cancel}: CreateTaskScreenProps) {
                                     key={item}
                                     style={[
                                         styles.priorityChoice,
+                                        {backgroundColor: colors.card, borderColor: colors.border},
                                         isSelected && styles.choiceSelected,
+                                        isSelected && {
+                                            backgroundColor: colors.primarySoft,
+                                            borderColor: colors.primary,
+                                        },
                                     ]}
                                     onPress={() => setPriority(item)}
                                 >
@@ -152,7 +159,9 @@ export function CreateTaskScreen({addTask, cancel}: CreateTaskScreenProps) {
                                     <Text
                                         style={[
                                             styles.choiceText,
+                                            {color: colors.subtext},
                                             isSelected && styles.choiceTextSelected,
+                                            isSelected && {color: colors.primary},
                                         ]}
                                     >
                                         {item}
@@ -165,7 +174,7 @@ export function CreateTaskScreen({addTask, cancel}: CreateTaskScreenProps) {
 
                 {/* 5. Selector de Categoría (General, Estudio, Trabajo, Personal) */}
                 <View style={styles.fieldset}>
-                    <Text style={styles.legend}>Categoría</Text>
+                    <Text style={[styles.legend, {color: colors.text}]}>Categoría</Text>
                     <View style={styles.categoryGrid}>
                         {(["General", "Estudio", "Trabajo", "Personal"] as Category[]).map(
                             (item) => {
@@ -175,19 +184,26 @@ export function CreateTaskScreen({addTask, cancel}: CreateTaskScreenProps) {
                                         key={item}
                                         style={[
                                             styles.categoryBtn,
+                                            {backgroundColor: colors.card, borderColor: colors.border},
                                             isSelected && styles.categoryBtnSelected,
+                                            isSelected && {
+                                                backgroundColor: colors.primarySoft,
+                                                borderColor: colors.primary,
+                                            },
                                         ]}
                                         onPress={() => setCategory(item)}
                                     >
                                         <View
                                             style={[
                                                 styles.categoryInitial,
+                                                {backgroundColor: colors.border},
                                                 isSelected && styles.categoryInitialSelected,
                                             ]}
                                         >
                                             <Text
                                                 style={[
                                                     styles.categoryInitialText,
+                                                    {color: colors.subtext},
                                                     isSelected && styles.categoryInitialTextSelected,
                                                 ]}
                                             >
@@ -197,7 +213,9 @@ export function CreateTaskScreen({addTask, cancel}: CreateTaskScreenProps) {
                                         <Text
                                             style={[
                                                 styles.choiceText,
+                                                {color: colors.subtext},
                                                 isSelected && styles.choiceTextSelected,
+                                                isSelected && {color: colors.primary},
                                             ]}
                                         >
                                             {item}
@@ -210,13 +228,22 @@ export function CreateTaskScreen({addTask, cancel}: CreateTaskScreenProps) {
                 </View>
 
                 {/* 6. Interruptor: Repetir tarea */}
-                <View style={styles.repeatRow}>
-                    <View style={styles.settingIconPurple}>
+                <View
+                    style={[
+                        styles.repeatRow,
+                        {backgroundColor: colors.card, borderColor: colors.border},
+                    ]}
+                >
+                    <View style={[styles.settingIconPurple, {backgroundColor: colors.primarySoft}]}>
                         <Icon name="calendar" size={20} color="#6254F5"/>
                     </View>
                     <View style={styles.repeatCopy}>
-                        <Text style={styles.repeatTitle}>Repetir tarea</Text>
-                        <Text style={styles.repeatSub}>Se repetirá cada semana</Text>
+                        <Text style={[styles.repeatTitle, {color: colors.text}]}>
+                            Repetir tarea
+                        </Text>
+                        <Text style={[styles.repeatSub, {color: colors.subtext}]}>
+                            Se repetirá cada semana
+                        </Text>
                     </View>
                     <TouchableOpacity
                         activeOpacity={0.8}
