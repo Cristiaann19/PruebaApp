@@ -1,0 +1,29 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'testing/**'
+      - '.github/workflows/backend.yml'
+  pull_request:
+    paths:
+      - 'testing/**'
+      - '.github/workflows/backend.yml'
+
+defaults:
+  run:
+    working-directory: testing
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+      - run: chmod +x mvnw
+      - run: ./mvnw -B verify
