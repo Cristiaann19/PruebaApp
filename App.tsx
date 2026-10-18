@@ -1,69 +1,62 @@
-// App.tsx
-import React, {useEffect, useMemo, useState} from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
     SafeAreaView,
     StatusBar,
-    ScrollView, StyleSheet, Text, TouchableOpacity, View
-
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// Importamos el ThemeProvider y el hook useTheme
-import {ThemeProvider, useTheme} from "./src/context/ThemeContext";
+import { ThemeProvider, useTheme } from "./src/context/ThemeContext";
 
-import {Screen, Task} from "./src/types";
-import {initialTasks} from "./src/constants/initialTasks";
-import {Icon} from "./src/components/common/Icon";
+import { Screen, Task } from "./src/types";
+import { Icon } from "./src/components/common/Icon";
+import {
+    fetchTasks,
+    postTask,
+    toggleTaskInServer,
+} from "./src/services/TaskService";
 
-import {SplashScreen} from "./src/screens/SplashScreen";
-import {OnboardingScreen} from "./src/screens/OnboardingScreen";
-import {LoginScreen} from "./src/screens/LoginScreen";
-import {HomeScreen} from "./src/screens/HomeScreen";
-import {CreateTaskScreen} from "./src/screens/CreateTaskScreen";
-import {CalendarScreen} from "./src/screens/CalendarScreen";
-import {StatsScreen} from "./src/screens/StatsScreen";
-import {SettingsScreen} from "./src/screens/SettingsScreen";
+import { SplashScreen } from "./src/screens/SplashScreen";
+import { OnboardingScreen } from "./src/screens/OnboardingScreen";
+import { LoginScreen } from "./src/screens/LoginScreen";
+import { HomeScreen } from "./src/screens/HomeScreen";
+import { CreateTaskScreen } from "./src/screens/CreateTaskScreen";
+import { CalendarScreen } from "./src/screens/CalendarScreen";
+import { StatsScreen } from "./src/screens/StatsScreen";
+import { SettingsScreen } from "./src/screens/SettingsScreen";
 
-const STORAGE_KEY = "taskly-tasks";
-
-/**
- * Componente interno que renderiza toda la aplicación y consume los colores del tema.
- */
 function MainApp() {
-    const {colors, isDark} = useTheme();
+    const { colors, isDark } = useTheme();
 
     const [screen, setScreen] = useState<Screen>("splash");
     const [toast, setToast] = useState<string>("");
-    const [tasks, setTasks] = useState<Task[]>(initialTasks);
-    const [isLoaded, setIsLoaded] = useState<boolean>(false);
+    // Ahora la lista inicia vacía y se llena con lo que venga de MySQL
+    const [tasks, setTasks] = useState<Task[]>([]);
 
+    // 1. EFECTO: Cargar las tareas desde Spring Boot (MySQL) al iniciar la app
     useEffect(() => {
-        const loadSavedTasks = async () => {
+        const loadTasksFromBackend = async () => {
             try {
-                const saved = await AsyncStorage.getItem(STORAGE_KEY);
-                if (saved !== null) {
-                    setTasks(JSON.parse(saved));
-                }
+                const serverTasks = await fetchTasks();
+                setTasks(serverTasks);
             } catch (error) {
-                console.error("Error al cargar las tareas:", error);
-            } finally {
-                setIsLoaded(true);
+                console.error("Error al conectar con Spring Boot:", error);
+                setToast("Modo sin conexión: verifica tu servidor");
             }
         };
-        loadSavedTasks();
+
+        loadTasksFromBackend();
     }, []);
 
-    useEffect(() => {
-        if (!isLoaded) return;
-        AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-    }, [tasks, isLoaded]);
-
+    // 2. EFECTO: Temporizador de la pantalla Splash (1.5 segundos)
     useEffect(() => {
         if (screen !== "splash") return;
         const timer = setTimeout(() => setScreen("onboarding-1"), 1500);
         return () => clearTimeout(timer);
     }, [screen]);
 
+    // 3. EFECTO: Ocultar mensaje flotante (toast) después de 2.6 segundos
     useEffect(() => {
         if (!toast) return;
         const timer = setTimeout(() => setToast(""), 2600);
@@ -72,29 +65,54 @@ function MainApp() {
 
     const navigate = (target: Screen) => setScreen(target);
 
-    const toggleTask = (id: number) => {
-        setTasks((currentTasks) =>
-            currentTasks.map((task) =>
-                task.id === id ? {...task, completed: !task.completed} : task
-            )
-        );
+    /**
+     * 4. FUNCIÓN: Marcar o desmarcar tarea en la base de datos MySQL.
+     */
+    const toggleTask = async (id: number) => {
+        try {
+            // Llamamos al endpoint PATCH /api/tasks/{id}/toggle de Spring Boot
+            const updatedTask = await toggleTaskInServer(id);
+
+            // Actualizamos el estado en React Native con la respuesta real de la BD
+            setTasks((currentTasks) =>
+                currentTasks.map((task) => (task.id === id ? updatedTask : task))
+            );
+        } catch (error) {
+            console.error("No se pudo actualizar la tarea:", error);
+            setToast("Error al actualizar en la base de datos");
+        }
     };
 
-    const addTask = (newTaskData: Omit<Task, "id" | "completed">) => {
-        const newTask: Task = {
-            ...newTaskData,
-            id: Date.now(),
-            completed: false,
-        };
-        setTasks((currentTasks) => [newTask, ...currentTasks]);
-        setToast("Tarea agregada correctamente");
-        setScreen("home");
+    /**
+     * 5. FUNCIÓN: Crear una nueva tarea y guardarla en MySQL.
+     */
+    const addTask = async (newTaskData: Omit<Task, "id" | "completed">) => {
+        try {
+            // Preparamos el objeto que espera nuestro TaskController en Java
+            const payload: Omit<Task, "id"> = {
+                ...newTaskData,
+                completed: false,
+                repeat: newTaskData.repeat ?? false,
+            };
+
+            // Enviamos por POST a Spring Boot y recibimos la tarea con su ID de MySQL
+            const savedTask = await postTask(payload);
+
+            // La agregamos al principio de nuestra lista en pantalla
+            setTasks((currentTasks) => [savedTask, ...currentTasks]);
+            setToast("Tarea guardada en MySQL");
+            setScreen("home");
+        } catch (error) {
+            console.error("No se pudo guardar la tarea:", error);
+            setToast("Error al guardar en el servidor");
+        }
     };
 
+    // 6. SELECTOR DE PANTALLA
     const content = useMemo(() => {
         switch (screen) {
             case "splash":
-                return <SplashScreen/>;
+                return <SplashScreen />;
             case "onboarding-1":
             case "onboarding-2":
             case "onboarding-3": {
@@ -112,7 +130,7 @@ function MainApp() {
                 );
             }
             case "login":
-                return <LoginScreen enter={() => setScreen("home")}/>;
+                return <LoginScreen enter={() => setScreen("home")} />;
             case "home":
                 return (
                     <HomeScreen
@@ -129,9 +147,9 @@ function MainApp() {
                     />
                 );
             case "calendar":
-                return <CalendarScreen tasks={tasks} navigate={navigate}/>;
+                return <CalendarScreen tasks={tasks} navigate={navigate} />;
             case "stats":
-                return <StatsScreen tasks={tasks} navigate={navigate}/>;
+                return <StatsScreen tasks={tasks} navigate={navigate} />;
             case "settings":
                 return (
                     <SettingsScreen
@@ -162,7 +180,7 @@ function MainApp() {
             {toast !== "" && (
                 <View style={styles.toast}>
                     <View style={styles.toastIcon}>
-                        <Icon name="check" size={16} color="#FFFFFF"/>
+                        <Icon name="check" size={16} color="#FFFFFF" />
                     </View>
                     <Text style={styles.toastText}>{toast}</Text>
                 </View>
@@ -172,12 +190,12 @@ function MainApp() {
 }
 
 /**
- * Componente principal que exporta la App envolviéndola con el ThemeProvider.
+ * Punto de entrada principal envuelto con el proveedor de Modo Oscuro.
  */
 export default function App() {
     return (
         <ThemeProvider>
-            <MainApp/>
+            <MainApp />
         </ThemeProvider>
     );
 }
@@ -201,7 +219,7 @@ const styles = StyleSheet.create({
         borderRadius: 30,
         elevation: 6,
         shadowColor: "#000",
-        shadowOffset: {width: 0, height: 3},
+        shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.25,
         shadowRadius: 5,
     },

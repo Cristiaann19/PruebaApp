@@ -8,32 +8,33 @@ import {
     View,
 } from "react-native";
 import { Screen, Task } from "../types";
-import { Icon } from "../components/common/Icon";
 import { useTheme } from "../context/ThemeContext";
+import { Icon } from "../components/common/Icon";
 import { BottomNav } from "../components/layout/BottomNav";
 import { TaskRow } from "../components/tasks/TaskRow";
 
 type HomeScreenProps = {
-    tasks: Task[]; // Lista completa de tareas recibida desde App.tsx
-    navigate: (screen: Screen) => void; // Función para cambiar de pantalla
-    toggle: (id: number) => void; // Función para marcar/desmarcar una tarea
+    tasks: Task[];
+    navigate: (screen: Screen) => void;
+    toggle: (id: number) => void;
 };
 
 type FilterType = "Todas" | "Pendientes" | "Completadas";
 
 export function HomeScreen({ tasks, navigate, toggle }: HomeScreenProps) {
+    // Conectamos los colores dinámicos del Modo Claro / Oscuro
     const { colors } = useTheme();
-    // Estado para controlar qué filtro está activo
+
     const [filter, setFilter] = useState<FilterType>("Todas");
 
-    // Calculamos cuántas tareas están completadas y el porcentaje total
+    // Cálculos en tiempo real del progreso
     const completedCount = tasks.filter((task) => task.completed).length;
     const totalCount = tasks.length;
     const progressPercent = Math.round(
         (completedCount / Math.max(totalCount, 1)) * 100
     );
 
-    // Filtramos las tareas según la pestaña seleccionada por el usuario
+    // Filtrado de tareas según la pestaña activa
     const filteredTasks = tasks.filter((task) => {
         if (filter === "Todas") return true;
         if (filter === "Completadas") return task.completed;
@@ -42,13 +43,12 @@ export function HomeScreen({ tasks, navigate, toggle }: HomeScreenProps) {
 
     return (
         <View style={[styles.screenWrapper, { backgroundColor: colors.background }]}>
-            {/* Área deslizable con todo el contenido del inicio */}
             <ScrollView
                 style={styles.appScroll}
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
             >
-                {/* 1. Encabezado con saludo y campana de notificación */}
+                {/* 1. Encabezado con saludo */}
                 <View style={styles.homeHeader}>
                     <View>
                         <Text style={styles.overline}>MI DÍA</Text>
@@ -72,7 +72,7 @@ export function HomeScreen({ tasks, navigate, toggle }: HomeScreenProps) {
                     </TouchableOpacity>
                 </View>
 
-                {/* 2. Tarjeta morada de progreso del día */}
+                {/* 2. Tarjeta morada de progreso */}
                 <View style={styles.progressCard}>
                     <View style={styles.progressHeader}>
                         <Text style={styles.progressLabel}>Progreso de hoy</Text>
@@ -88,12 +88,11 @@ export function HomeScreen({ tasks, navigate, toggle }: HomeScreenProps) {
                     </View>
                 </View>
 
-                {/* 3. Cuadrícula de 3 tarjetas de resumen (Total, Completadas, Pendientes) */}
+                {/* 3. Cuadrícula de resumen (Total, Completadas, Pendientes) */}
                 <View style={styles.statGrid}>
                     <View
                         style={[
                             styles.statCard,
-                            styles.statTotal,
                             { backgroundColor: colors.card, borderColor: colors.border },
                         ]}
                     >
@@ -103,13 +102,14 @@ export function HomeScreen({ tasks, navigate, toggle }: HomeScreenProps) {
                         <Text style={[styles.statNumber, { color: colors.text }]}>
                             {totalCount}
                         </Text>
-                        <Text style={[styles.statLabel, { color: colors.subtext }]}>Total</Text>
+                        <Text style={[styles.statLabel, { color: colors.subtext }]}>
+                            Total
+                        </Text>
                     </View>
 
                     <View
                         style={[
                             styles.statCard,
-                            styles.statDone,
                             { backgroundColor: colors.card, borderColor: colors.border },
                         ]}
                     >
@@ -127,7 +127,6 @@ export function HomeScreen({ tasks, navigate, toggle }: HomeScreenProps) {
                     <View
                         style={[
                             styles.statCard,
-                            styles.statPending,
                             { backgroundColor: colors.card, borderColor: colors.border },
                         ]}
                     >
@@ -143,7 +142,7 @@ export function HomeScreen({ tasks, navigate, toggle }: HomeScreenProps) {
                     </View>
                 </View>
 
-                {/* 4. Sección de lista de tareas y botones de filtro */}
+                {/* 4. Lista de tareas y filtros */}
                 <View style={styles.tasksSection}>
                     <View style={styles.sectionTitleRow}>
                         <Text style={[styles.sectionTitle, { color: colors.text }]}>
@@ -154,7 +153,6 @@ export function HomeScreen({ tasks, navigate, toggle }: HomeScreenProps) {
                         </Text>
                     </View>
 
-                    {/* Botones de filtro: Todas, Pendientes, Completadas */}
                     <View style={styles.filtersRow}>
                         {(["Todas", "Pendientes", "Completadas"] as const).map((item) => {
                             const isActive = filter === item;
@@ -182,11 +180,15 @@ export function HomeScreen({ tasks, navigate, toggle }: HomeScreenProps) {
                         })}
                     </View>
 
-                    {/* Lista de tareas o estado vacío si no hay resultados */}
+                    {/* CORRECCIÓN DE KEY: Usamos task.id y, si viniera vacío, un respaldo con el index */}
                     <View style={styles.taskList}>
                         {filteredTasks.length > 0 ? (
-                            filteredTasks.map((task) => (
-                                <TaskRow key={task.id} task={task} toggle={toggle} />
+                            filteredTasks.map((task, index) => (
+                                <TaskRow
+                                    key={task.id !== undefined ? String(task.id) : `task-${index}`}
+                                    task={task}
+                                    toggle={toggle}
+                                />
                             ))
                         ) : (
                             <View
@@ -210,7 +212,6 @@ export function HomeScreen({ tasks, navigate, toggle }: HomeScreenProps) {
                 </View>
             </ScrollView>
 
-            {/* Botón flotante de acción rápida (FAB) */}
             <TouchableOpacity
                 style={styles.fab}
                 activeOpacity={0.85}
@@ -220,7 +221,6 @@ export function HomeScreen({ tasks, navigate, toggle }: HomeScreenProps) {
                 <Icon name="plus" size={26} color="#FFFFFF" />
             </TouchableOpacity>
 
-            {/* Barra de navegación inferior fija */}
             <BottomNav active="home" navigate={navigate} />
         </View>
     );
@@ -229,7 +229,6 @@ export function HomeScreen({ tasks, navigate, toggle }: HomeScreenProps) {
 const styles = StyleSheet.create({
     screenWrapper: {
         flex: 1,
-        backgroundColor: "#F8F9FE",
     },
     appScroll: {
         flex: 1,
@@ -237,7 +236,7 @@ const styles = StyleSheet.create({
     scrollContent: {
         paddingHorizontal: 20,
         paddingTop: 16,
-        paddingBottom: 90, // Espacio extra abajo para que el botón flotante no tape la última tarea
+        paddingBottom: 90,
     },
     homeHeader: {
         flexDirection: "row",
@@ -255,22 +254,18 @@ const styles = StyleSheet.create({
     greeting: {
         fontSize: 24,
         fontWeight: "800",
-        color: "#1E1E2D",
     },
     subtitle: {
         fontSize: 14,
-        color: "#64748B",
         marginTop: 2,
     },
     notificationBtn: {
         width: 44,
         height: 44,
         borderRadius: 14,
-        backgroundColor: "#FFFFFF",
         alignItems: "center",
         justifyContent: "center",
         borderWidth: 1,
-        borderColor: "#F1F5F9",
     },
     notificationDot: {
         position: "absolute",
@@ -331,16 +326,11 @@ const styles = StyleSheet.create({
     },
     statCard: {
         flex: 1,
-        backgroundColor: "#FFFFFF",
         borderRadius: 16,
         padding: 14,
         alignItems: "flex-start",
         borderWidth: 1,
-        borderColor: "#F1F5F9",
     },
-    statTotal: {},
-    statDone: {},
-    statPending: {},
     statIconWrap: {
         width: 34,
         height: 34,
@@ -352,11 +342,9 @@ const styles = StyleSheet.create({
     statNumber: {
         fontSize: 20,
         fontWeight: "800",
-        color: "#1E1E2D",
     },
     statLabel: {
         fontSize: 12,
-        color: "#64748B",
         marginTop: 2,
     },
     tasksSection: {
@@ -371,11 +359,9 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 18,
         fontWeight: "800",
-        color: "#1E1E2D",
     },
     sectionCount: {
         fontSize: 13,
-        color: "#64748B",
         fontWeight: "600",
     },
     filtersRow: {
@@ -387,9 +373,7 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         paddingHorizontal: 14,
         borderRadius: 20,
-        backgroundColor: "#FFFFFF",
         borderWidth: 1,
-        borderColor: "#E2E8F0",
     },
     filterChipActive: {
         backgroundColor: "#6254F5",
@@ -398,7 +382,6 @@ const styles = StyleSheet.create({
     filterChipText: {
         fontSize: 13,
         fontWeight: "600",
-        color: "#64748B",
     },
     filterChipTextActive: {
         color: "#FFFFFF",
@@ -409,12 +392,10 @@ const styles = StyleSheet.create({
     emptyState: {
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#FFFFFF",
         borderRadius: 18,
         paddingVertical: 36,
         paddingHorizontal: 20,
         borderWidth: 1,
-        borderColor: "#F1F5F9",
     },
     emptyIconCircle: {
         width: 54,
@@ -428,12 +409,10 @@ const styles = StyleSheet.create({
     emptyTitle: {
         fontSize: 16,
         fontWeight: "700",
-        color: "#1E1E2D",
         marginBottom: 4,
     },
     emptySubtitle: {
         fontSize: 13,
-        color: "#64748B",
     },
     fab: {
         position: "absolute",
