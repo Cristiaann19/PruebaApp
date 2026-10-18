@@ -81,6 +81,7 @@ every mutation.
 | Spring Data JPA | (managed) | Data access layer |
 | MySQL | 8 | Relational database |
 | Lombok | (managed) | Boilerplate reduction |
+| springdoc-openapi | 3.1.1 | OpenAPI 3 / Swagger UI docs |
 | Maven | wrapper (`mvnw`) | Build tool |
 
 ---
@@ -127,6 +128,19 @@ Base URL: `/api/tasks`
 | `PUT` | `/api/tasks/{id}` | Update an existing task |
 | `PATCH` | `/api/tasks/{id}/toggle` | Toggle completed / pending |
 | `DELETE` | `/api/tasks/{id}` | Delete a task |
+
+---
+
+## API Documentation (OpenAPI / Swagger)
+
+The REST API is documented with **OpenAPI 3** using
+[springdoc-openapi](https://springdoc.org). With the backend running you get:
+
+- **Swagger UI (interactive):** <http://localhost:8080/swagger-ui.html>
+- **OpenAPI contract (JSON):** <http://localhost:8080/v3/api-docs>
+- **OpenAPI contract (YAML):** <http://localhost:8080/v3/api-docs.yaml>
+
+Swagger UI lets you explore and test every endpoint straight from the browser.
 
 ---
 

@@ -81,6 +81,7 @@ servidor en cada modificación.
 | Spring Data JPA | (gestionado) | Capa de acceso a datos |
 | MySQL | 8 | Base de datos relacional |
 | Lombok | (gestionado) | Reducción de boilerplate |
+| springdoc-openapi | 3.1.1 | Documentación OpenAPI 3 / Swagger UI |
 | Maven | wrapper (`mvnw`) | Herramienta de build |
 
 ---
@@ -127,6 +128,19 @@ URL base: `/api/tasks`
 | `PUT` | `/api/tasks/{id}` | Actualiza una tarea existente |
 | `PATCH` | `/api/tasks/{id}/toggle` | Alterna completada / pendiente |
 | `DELETE` | `/api/tasks/{id}` | Elimina una tarea |
+
+---
+
+## Documentación de la API (OpenAPI / Swagger)
+
+La API REST está documentada con **OpenAPI 3** usando
+[springdoc-openapi](https://springdoc.org). Con el backend en ejecución obtienes:
+
+- **Swagger UI (interactiva):** <http://localhost:8080/swagger-ui.html>
+- **Contrato OpenAPI (JSON):** <http://localhost:8080/v3/api-docs>
+- **Contrato OpenAPI (YAML):** <http://localhost:8080/v3/api-docs.yaml>
+
+Swagger UI te permite explorar y probar cada endpoint directamente desde el navegador.
 
 ---
 
