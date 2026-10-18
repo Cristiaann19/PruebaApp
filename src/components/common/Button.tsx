@@ -1,4 +1,3 @@
-// src/components/common/Button.tsx
 import React, {ReactNode} from "react";
 import {
     StyleSheet,

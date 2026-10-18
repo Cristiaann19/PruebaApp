@@ -1,6 +1,3 @@
-// src/types/index.ts
-
-// Pantallas
 export type Screen =
     | "splash"
     | "onboarding-1"
@@ -13,28 +10,19 @@ export type Screen =
     | "stats"
     | "settings";
 
-/*
-*
- * Niveles de prioridad para cada tarea.
-*/
 export type Priority = "Baja" | "Media" | "Alta";
 
-/**
- * Categorías disponibles para clasificar las tareas.
- */
 export type Category = "General" | "Estudio" | "Trabajo" | "Personal";
 
-/**
- * Estructura principal de un objeto Tarea (Task).
- */
-export type Task = {
+export interface Task {
     id: number;
     title: string;
-    description?: string;
+    description: string;
     date: string;
     time: string;
     priority: Priority;
-    category: Category;
+    category: string;
     completed: boolean;
-    repeat?: boolean;
-};
+    repeat: boolean;
+}
+

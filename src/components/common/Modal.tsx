@@ -1,4 +1,3 @@
-// src/components/common/Modal.tsx
 import React, {ReactNode} from "react";
 import {
     Modal as RNModal,

@@ -1,4 +1,3 @@
-// src/screens/StatsScreen.tsx
 import React, {useState} from "react";
 import {
     ScrollView,
@@ -14,7 +13,7 @@ import {Header} from "../components/common/Header";
 import {BottomNav} from "../components/layout/BottomNav";
 
 type StatsScreenProps = {
-    tasks: Task[]; // Al venir de App.tsx (o de una BD), cualquier cambio actualiza el gráfico en vivo
+    tasks: Task[];
     navigate: (screen: Screen) => void;
 };
 
@@ -29,7 +28,6 @@ export function StatsScreen({tasks, navigate}: StatsScreenProps) {
     const inProgress = Math.min(1, pending);
     const percent = Math.round((complete / Math.max(total, 1)) * 100);
 
-    // Conteo dinámico por cada categoría
     const categories = (
         ["Estudio", "Trabajo", "Personal", "General"] as Category[]
     ).map((name) => ({
@@ -37,15 +35,12 @@ export function StatsScreen({tasks, navigate}: StatsScreenProps) {
         count: tasks.filter((task) => task.category === name).length,
     }));
 
-    // 2. MATEMÁTICA DEL GRÁFICO CIRCULAR (DONUT CHART SVG)
-    const size = 120; // Tamaño del gráfico en píxeles
-    const strokeWidth = 14; // Grosor del anillo
+    const size = 120;
+    const strokeWidth = 14;
     const radius = (size - strokeWidth) / 2;
     const circumference = 2 * Math.PI * radius; // Fórmula: 2 * π * radio
-    // Cuánto del círculo se llena según el porcentaje actual (0% a 100%)
     const strokeDashoffset = circumference - (percent / 100) * circumference;
 
-    // Colores para las 4 barras de categorías
     const barColors = ["#6254F5", "#22C55E", "#F59E0B", "#EC4899"];
 
     return (

@@ -1,4 +1,3 @@
-// src/components/common/Icon.tsx
 import React, {ReactNode} from "react";
 import Svg, {Path, Circle, Rect, G} from "react-native-svg";
 

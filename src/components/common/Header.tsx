@@ -1,4 +1,3 @@
-// src/components/common/Header.tsx
 import React, {ReactNode} from "react";
 import {StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {useTheme} from "../../context/ThemeContext";

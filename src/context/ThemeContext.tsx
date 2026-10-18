@@ -9,6 +9,7 @@ export type ThemeMode = "Claro" | "Oscuro";
 export type ThemeColors = {
     background: string;
     card: string;
+    paper: string;
     text: string;
     subtext: string;
     border: string;
@@ -19,6 +20,7 @@ export type ThemeColors = {
 // Colores para el modo Claro
 const lightColors: ThemeColors = {
     background: "#F8F9FE",
+    paper: "#ffffff",
     card: "#FFFFFF",
     text: "#1E1E2D",
     subtext: "#64748B",
@@ -30,6 +32,7 @@ const lightColors: ThemeColors = {
 // Colores para el modo Oscuro
 const darkColors: ThemeColors = {
     background: "#0F172A",
+    paper:"#3981de",
     card: "#1E293B",
     text: "#F8FAFC",
     subtext: "#94A3B8",

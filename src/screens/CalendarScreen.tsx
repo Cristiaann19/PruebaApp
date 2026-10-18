@@ -1,4 +1,3 @@
-// src/screens/CalendarScreen.tsx
 import React, { useState } from "react";
 import {
     ScrollView,

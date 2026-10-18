@@ -39,18 +39,18 @@ function OnboardingArt({kind}: { kind: string }) {
             {/* Ilustración 1: Hoja de tareas y reloj */}
             {kind === "tasks" && (
                 <View style={styles.artWrapper}>
-                    <View style={[styles.paper, {backgroundColor: colors.card}]}>
-                        <View style={[styles.paperLine, {backgroundColor: colors.border}]}/>
+                    <View style={[styles.paper, {backgroundColor: colors.paper}]}>
+                        <View style={[styles.paperLine, {backgroundColor: colors.text}]}/>
                         <View
                             style={[
                                 styles.paperLine,
-                                {width: "75%", backgroundColor: colors.border},
+                                {width: "75%", backgroundColor: colors.text},
                             ]}
                         />
                         <View
                             style={[
                                 styles.paperLine,
-                                {width: "55%", backgroundColor: colors.border},
+                                {width: "55%", backgroundColor: colors.text},
                             ]}
                         />
                     </View>
@@ -95,7 +95,7 @@ function OnboardingArt({kind}: { kind: string }) {
                     <Path
                         d="M70 91v19M50 120h40"
                         fill="none"
-                        stroke="#6254F5"
+                        stroke="#F0A62C"
                         strokeWidth="10"
                         strokeLinecap="round"
                     />

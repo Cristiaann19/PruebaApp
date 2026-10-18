@@ -1,4 +1,3 @@
-// src/components/common/Field.tsx
 import React, { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../../context/ThemeContext";

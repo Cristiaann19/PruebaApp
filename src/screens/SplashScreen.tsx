@@ -1,12 +1,8 @@
-// src/screens/SplashScreen.tsx
 import React from "react";
 import {StyleSheet, Text, View} from "react-native";
 import {Logo} from "../components/common/Logo";
 
-/**
- * Pantalla de bienvenida (Splash) que se muestra al abrir la aplicación.
- * Utiliza el fondo morado principal y el logo en versión clara.
- */
+
 export function SplashScreen() {
     return (
         <View style={styles.container}>

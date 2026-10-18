@@ -68,20 +68,32 @@ function MainApp() {
     /**
      * 4. FUNCIÓN: Marcar o desmarcar tarea en la base de datos MySQL.
      */
+
     const toggleTask = async (id: number) => {
+        if (id == null || !Number.isInteger(id) || id <= 0) {
+            console.error("ID inválido al actualizar la tarea:", id);
+            setToast("No se encontró el ID de la tarea");
+            return;
+        }
+
         try {
-            // Llamamos al endpoint PATCH /api/tasks/{id}/toggle de Spring Boot
+            console.log("ID de la tarea seleccionada:", id);
+
             const updatedTask = await toggleTaskInServer(id);
 
-            // Actualizamos el estado en React Native con la respuesta real de la BD
             setTasks((currentTasks) =>
-                currentTasks.map((task) => (task.id === id ? updatedTask : task))
+                currentTasks.map((task) =>
+                    task.id === id ? updatedTask : task
+                )
             );
+
+            console.log("Tarea actualizada correctamente:", updatedTask);
         } catch (error) {
             console.error("No se pudo actualizar la tarea:", error);
             setToast("Error al actualizar en la base de datos");
         }
     };
+
 
     /**
      * 5. FUNCIÓN: Crear una nueva tarea y guardarla en MySQL.

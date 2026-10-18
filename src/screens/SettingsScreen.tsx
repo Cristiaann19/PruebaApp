@@ -1,4 +1,3 @@
-// src/screens/SettingsScreen.tsx
 import React, {ReactNode, useState} from "react";
 import {
     ScrollView,

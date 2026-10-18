@@ -1,4 +1,3 @@
-// src/components/common/Logo.tsx
 import React from "react";
 import {StyleSheet, Text, View} from "react-native";
 import {useTheme} from "../../context/ThemeContext";
