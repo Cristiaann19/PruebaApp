@@ -32,14 +32,14 @@ La interfaz está diseñada en Figma. Puedes revisar los mockups aquí:
 | Estado | Característica |
 | :---: | :--- |
 | ✅ | Splash screen y flujo de onboarding |
-| ✅ | Pantalla de login (actualmente **simulada**, sin validación de credenciales) |
+| ✅ | Login y registro validados contra MySQL |
+| ✅ | Autenticación con JWT (Spring Security + BCrypt) |
 | ✅ | Lista de tareas cargada desde la base de datos MySQL |
 | ✅ | Crear nuevas tareas (persistidas vía la API REST) |
 | ✅ | Marcar tareas como completadas / pendientes (toggle) |
 | ✅ | Vista de calendario |
 | ✅ | Pantalla de estadísticas |
 | ✅ | Ajustes con tema claro / oscuro |
-| 🚧 | Login validado por usuario |
 | 🚧 | Eliminación de tareas desde la interfaz (el endpoint ya existe en el backend) |
 
 ---
@@ -52,9 +52,10 @@ La interfaz está diseñada en Figma. Puedes revisar los mockups aquí:
 └────────────────────┘                       └──────────────────┘                  └─────────┘
 ```
 
-La app móvil consume `http://<ip-servidor>:8080/api/tasks`. La navegación está basada en
-estado dentro de `App.tsx`, y las tareas se obtienen al iniciar y se sincronizan con el
-servidor en cada modificación.
+La app móvil consume `http://<ip-servidor>:8080`. La navegación está basada en estado
+dentro de `App.tsx`. Los usuarios se autentican con `/api/auth/login` y cada petición de
+tareas se envía con `Authorization: Bearer <token>`. Las tareas se obtienen tras un login
+correcto y se sincronizan con el servidor en cada modificación.
 
 ---
 
@@ -79,6 +80,8 @@ servidor en cada modificación.
 | Spring Boot | 4.1.1 | Framework de la API REST |
 | Java | 21 | Runtime del lenguaje |
 | Spring Data JPA | (gestionado) | Capa de acceso a datos |
+| Spring Security + JWT | (gestionado) | Autenticación stateless |
+| Bean Validation | (gestionado) | Validación de DTOs con `@Valid` |
 | MySQL | 8 | Base de datos relacional |
 | Lombok | (gestionado) | Reducción de boilerplate |
 | springdoc-openapi | 3.1.1 | Documentación OpenAPI 3 / Swagger UI |
@@ -97,18 +100,22 @@ testing-app/
 │   │   ├── constants/          # Datos iniciales / de ejemplo
 │   │   ├── context/            # Contexto de tema (claro/oscuro)
 │   │   ├── screens/            # Splash, Onboarding, Login, Home, CreateTask...
-│   │   ├── services/           # TaskService (cliente REST)
+│   │   ├── services/           # TaskService / AuthService (clientes REST)
 │   │   ├── types/              # Tipos TypeScript compartidos
 │   │   └── utils/              # Utilidades de fechas
 │   └── package.json
 │
 └── testing/                    # Backend Spring Boot
+    ├── database/
+    │   └── seed_users.sql      # Script manual de usuarios para MySQL
     ├── src/main/java/com/example/testing/
-    │   ├── Controller/         # TaskController (endpoints REST)
-    │   ├── Model/              # Entidad Task
-    │   ├── Repository/         # TaskRepository (JPA)
-    │   ├── Service/            # TaskService (lógica de negocio)
-    │   └── config/             # DataInitializer (datos de ejemplo)
+    │   ├── Controller/         # TaskController, AuthController
+    │   ├── Dto/                # DTOs de login/registro y respuestas
+    │   ├── Model/              # Entidades Task y User
+    │   ├── Repository/         # TaskRepository, UserRepository (JPA)
+    │   ├── Security/           # JwtService, filtro JWT, SecurityConfig
+    │   ├── Service/            # TaskService, AuthService
+    │   └── config/             # DataInitializer (datos de tareas)
     ├── src/main/resources/
     │   └── application.properties
     └── pom.xml
@@ -118,7 +125,18 @@ testing-app/
 
 ## Endpoints de la API
 
-URL base: `/api/tasks`
+URL base: `http://<ip-servidor>:8080`
+
+### Autenticación
+
+| Método | Endpoint | Descripción |
+| :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | Registra un usuario y devuelve un JWT |
+| `POST` | `/api/auth/login` | Valida credenciales y devuelve un JWT |
+
+### Tareas
+
+Todos los endpoints de tareas requieren `Authorization: Bearer <token>`.
 
 | Método | Endpoint | Descripción |
 | :--- | :--- | :--- |
@@ -160,6 +178,16 @@ Entidad `Task` (tabla `tasks`):
 | `completed` | `boolean` | Estado de finalización |
 | `repeat` | `boolean` | Marca de tarea recurrente |
 
+Entidad `User` (tabla `users`):
+
+| Campo | Tipo | Descripción |
+| :--- | :--- | :--- |
+| `id` | `Long` | Clave primaria autogenerada |
+| `name` | `String` | Nombre visible |
+| `email` | `String` | Correo de login único |
+| `password` | `String` | Hash BCrypt de la contraseña |
+| `role` | `String` | `USER` \| `ADMIN` |
+
 ---
 
 ## Requisitos previos
@@ -190,6 +218,22 @@ spring.datasource.username=root
 spring.datasource.password=TU_PASSWORD
 ```
 
+Define el secreto JWT (mínimo 32 caracteres) antes de arrancar la API:
+
+```powershell
+$env:JWT_SECRET = "cambia-esto-por-un-secreto-largo-y-aleatorio"
+```
+
+```bash
+export JWT_SECRET="cambia-esto-por-un-secreto-largo-y-aleatorio"
+```
+
+Carga los usuarios de ejemplo manualmente (**no** se inicializan desde Java):
+
+```bash
+mysql -u root -p taskly_db < testing/database/seed_users.sql
+```
+
 Ejecuta la API:
 
 ```bash
@@ -198,12 +242,13 @@ cd testing
 ```
 
 El servidor arranca en `http://localhost:8080`. En la primera ejecución,
-`DataInitializer` inserta 5 tareas de ejemplo en la base de datos.
+`DataInitializer` inserta 5 tareas de ejemplo en la base de datos. Los usuarios
+provienen únicamente de `database/seed_users.sql`.
 
 ### 2. App móvil (Expo)
 
 Instala las dependencias y define la IP del backend a la que se conectará la app. En
-`testing-app-movil/src/services/TaskService.ts`:
+`testing-app-movil/src/services/api.ts`:
 
 ```ts
 const SERVER_IP = "192.168.100.11"; // <-- usa la IP LAN de tu máquina
@@ -227,11 +272,11 @@ npx expo start
 
 Trabajo planificado y próximo:
 
-- [ ] **Login validado por usuario** — autenticación real en lugar de la simulación actual.
+- [x] **Login validado por usuario** — autenticación con JWT, login y registro.
 - [ ] **Eliminación de tareas desde la interfaz** — el endpoint ya existe en el backend; falta conectarlo en la app.
 - [ ] Edición de tareas y mejor filtrado / búsqueda.
 - [ ] Notificaciones y recordatorios para tareas programadas.
-- [ ] Soporte multiusuario.
+- [ ] Soporte multiusuario (tareas asociadas a cada usuario).
 
 ---
 

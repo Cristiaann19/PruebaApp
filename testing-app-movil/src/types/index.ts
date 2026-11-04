@@ -14,6 +14,20 @@ export type Priority = "Baja" | "Media" | "Alta";
 
 export type Category = "General" | "Estudio" | "Trabajo" | "Personal";
 
+export interface User {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+}
+
+export interface AuthResponse {
+    token: string;
+    tokenType: string;
+    expiresIn: number;
+    user: User;
+}
+
 export interface Task {
     id: number;
     title: string;

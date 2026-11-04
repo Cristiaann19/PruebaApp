@@ -14,6 +14,7 @@ type ButtonProps = {
     children: ReactNode;
     variant?: ButtonVariant;
     full?: boolean; // Si es true, ocupa el 100% del ancho disponible
+    disabled?: boolean;
     onClick?: () => void;
     style?: StyleProp<ViewStyle>;
 };
@@ -22,6 +23,7 @@ export function Button({
                            children,
                            variant = "primary",
                            full = false,
+                           disabled = false,
                            onClick,
                            style,
                        }: ButtonProps) {
@@ -42,12 +44,14 @@ export function Button({
     return (
         <TouchableOpacity
             activeOpacity={0.8}
-            onPress={onClick}
+            disabled={disabled}
+            onPress={disabled ? undefined : onClick}
             style={[
                 styles.btn,
                 styles[`btn_${variant}`],
                 themedStyles,
                 full && styles.full,
+                disabled && styles.disabled,
                 style,
             ]}
         >
@@ -77,6 +81,9 @@ const styles = StyleSheet.create({
     },
     full: {
         width: "100%",
+    },
+    disabled: {
+        opacity: 0.55,
     },
     // Variantes de fondo
     btn_primary: {

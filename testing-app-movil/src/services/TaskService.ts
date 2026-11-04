@@ -1,12 +1,25 @@
-
 import { Task } from "../types";
+import { API_BASE_URL } from "./api";
+import { getToken } from "./AuthService";
 
-const SERVER_IP = "192.168.100.11";
-const API_URL = `http://${SERVER_IP}:8080/api/tasks`;
+const API_URL = `${API_BASE_URL}/api/tasks`;
+
+async function authHeaders(
+    extra?: Record<string, string>
+): Promise<Record<string, string>> {
+    const token = await getToken();
+
+    return {
+        ...(extra ?? {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+}
 
 // 1. Obtener todas las tareas
 export async function fetchTasks(): Promise<Task[]> {
-    const response = await fetch(API_URL);
+    const response = await fetch(API_URL, {
+        headers: await authHeaders(),
+    });
 
     if (!response.ok) {
         throw new Error(
@@ -23,9 +36,9 @@ export async function postTask(
 ): Promise<Task> {
     const response = await fetch(API_URL, {
         method: "POST",
-        headers: {
+        headers: await authHeaders({
             "Content-Type": "application/json",
-        },
+        }),
         body: JSON.stringify(newTask),
     });
 
@@ -54,6 +67,7 @@ export async function toggleTaskInServer(
 
     const response = await fetch(url, {
         method: "PATCH",
+        headers: await authHeaders(),
     });
 
     if (!response.ok) {
@@ -77,6 +91,7 @@ export async function deleteTaskFromServer(
 
     const response = await fetch(`${API_URL}/${id}`, {
         method: "DELETE",
+        headers: await authHeaders(),
     });
 
     if (!response.ok) {

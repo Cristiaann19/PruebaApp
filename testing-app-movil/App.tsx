@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
     SafeAreaView,
     StatusBar,
@@ -16,6 +16,7 @@ import {
     postTask,
     toggleTaskInServer,
 } from "./src/services/TaskService";
+import { clearSession, getToken } from "./src/services/AuthService";
 
 import { SplashScreen } from "./src/screens/SplashScreen";
 import { OnboardingScreen } from "./src/screens/OnboardingScreen";
@@ -34,20 +35,40 @@ function MainApp() {
     // Ahora la lista inicia vacía y se llena con lo que venga de MySQL
     const [tasks, setTasks] = useState<Task[]>([]);
 
-    // 1. EFECTO: Cargar las tareas desde Spring Boot (MySQL) al iniciar la app
-    useEffect(() => {
-        const loadTasksFromBackend = async () => {
-            try {
-                const serverTasks = await fetchTasks();
-                setTasks(serverTasks);
-            } catch (error) {
-                console.error("Error al conectar con Spring Boot:", error);
-                setToast("Modo sin conexión: verifica tu servidor");
+    // 1. FUNCIÓN: Cargar las tareas desde Spring Boot (MySQL)
+    const loadTasksFromBackend = useCallback(async () => {
+        try {
+            const serverTasks = await fetchTasks();
+            setTasks(serverTasks);
+        } catch (error) {
+            console.error("Error al conectar con Spring Boot:", error);
+
+            if (error instanceof Error && error.message.includes("HTTP 401")) {
+                await clearSession();
+                setTasks([]);
+                setScreen("login");
+                return;
             }
+
+            setToast("Modo sin conexión: verifica tu servidor");
+        }
+    }, []);
+
+    // 2. EFECTO: Restaurar la sesión guardada al abrir la app
+    useEffect(() => {
+        const restoreSession = async () => {
+            const token = await getToken();
+
+            if (!token) {
+                return;
+            }
+
+            setScreen("home");
+            await loadTasksFromBackend();
         };
 
-        loadTasksFromBackend();
-    }, []);
+        restoreSession();
+    }, [loadTasksFromBackend]);
 
     // 2. EFECTO: Temporizador de la pantalla Splash (1.5 segundos)
     useEffect(() => {
@@ -64,6 +85,19 @@ function MainApp() {
     }, [toast]);
 
     const navigate = (target: Screen) => setScreen(target);
+
+    // Entra al home solo después de un login/registro exitoso
+    const enter = async () => {
+        setScreen("home");
+        await loadTasksFromBackend();
+    };
+
+    // Cierra la sesión y vuelve al login
+    const logout = async () => {
+        await clearSession();
+        setTasks([]);
+        setScreen("login");
+    };
 
     /**
      * 4. FUNCIÓN: Marcar o desmarcar tarea en la base de datos MySQL.
@@ -142,7 +176,7 @@ function MainApp() {
                 );
             }
             case "login":
-                return <LoginScreen enter={() => setScreen("home")} />;
+                return <LoginScreen enter={enter} />;
             case "home":
                 return (
                     <HomeScreen
@@ -166,7 +200,7 @@ function MainApp() {
                 return (
                     <SettingsScreen
                         navigate={navigate}
-                        logout={() => setScreen("login")}
+                        logout={logout}
                     />
                 );
         }

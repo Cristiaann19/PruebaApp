@@ -15,6 +15,7 @@ import {Icon} from "../components/common/Icon";
 import {Logo} from "../components/common/Logo";
 import {Modal} from "../components/common/Modal";
 import {useTheme} from "../context/ThemeContext";
+import {login as loginUser, register as registerUser} from "../services/AuthService";
 
 type LoginScreenProps = {
     enter: () => void; // Función que navega hacia la pantalla principal ("home")
@@ -28,10 +29,42 @@ export function LoginScreen({enter}: LoginScreenProps) {
     const [password, setPassword] = useState("");
 
     // Estados del modal de registro
-    const [register, setRegister] = useState(false);
+    const [registerOpen, setRegisterOpen] = useState(false);
     const [regName, setRegName] = useState("");
     const [regEmail, setRegEmail] = useState("");
     const [regPassword, setRegPassword] = useState("");
+
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+
+    const handleLogin = async () => {
+        setError(null);
+        setLoading(true);
+
+        try {
+            await loginUser(email.trim(), password);
+            enter();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "No se pudo iniciar sesión");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRegister = async () => {
+        setError(null);
+        setLoading(true);
+
+        try {
+            await registerUser(regName.trim(), regEmail.trim(), regPassword);
+            setRegisterOpen(false);
+            enter();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "No se pudo crear la cuenta");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <KeyboardAvoidingView
@@ -99,8 +132,12 @@ export function LoginScreen({enter}: LoginScreenProps) {
                         </Text>
                     </TouchableOpacity>
 
-                    <Button full onClick={enter}>
-                        Iniciar sesión
+                    {error && !registerOpen && (
+                        <Text style={styles.errorText}>{error}</Text>
+                    )}
+
+                    <Button full disabled={loading} onClick={handleLogin}>
+                        {loading ? "Ingresando..." : "Iniciar sesión"}
                     </Button>
                 </View>
 
@@ -128,7 +165,12 @@ export function LoginScreen({enter}: LoginScreenProps) {
                     <Text style={[styles.signupText, {color: colors.subtext}]}>
                         ¿No tienes una cuenta?{" "}
                     </Text>
-                    <TouchableOpacity onPress={() => setRegister(true)}>
+                    <TouchableOpacity
+                        onPress={() => {
+                            setError(null);
+                            setRegisterOpen(true);
+                        }}
+                    >
                         <Text style={[styles.signupLink, {color: colors.primary}]}>
                             Regístrate
                         </Text>
@@ -136,8 +178,8 @@ export function LoginScreen({enter}: LoginScreenProps) {
                 </View>
 
                 {/* Modal emergente para crear cuenta */}
-                {register && (
-                    <Modal title="Crea tu cuenta" close={() => setRegister(false)}>
+                {registerOpen && (
+                    <Modal title="Crea tu cuenta" close={() => setRegisterOpen(false)}>
                         <View>
                             <Field label="Nombre completo" icon="user">
                                 <TextInput
@@ -172,14 +214,12 @@ export function LoginScreen({enter}: LoginScreenProps) {
                                 />
                             </Field>
 
-                            <Button
-                                full
-                                onClick={() => {
-                                    setRegister(false);
-                                    enter();
-                                }}
-                            >
-                                Crear cuenta
+                            {error && (
+                                <Text style={styles.errorText}>{error}</Text>
+                            )}
+
+                            <Button full disabled={loading} onClick={handleRegister}>
+                                {loading ? "Creando cuenta..." : "Crear cuenta"}
                             </Button>
                         </View>
                     </Modal>
@@ -275,5 +315,12 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: "700",
         color: "#6254F5",
+    },
+    errorText: {
+        fontSize: 13,
+        fontWeight: "600",
+        color: "#EF4444",
+        marginBottom: 12,
+        textAlign: "center",
     },
 });

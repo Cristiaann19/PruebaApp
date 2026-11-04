@@ -32,14 +32,14 @@ The UI/UX is designed in Figma. You can review the mockups here:
 | Status | Feature |
 | :---: | :--- |
 | ✅ | Splash screen and animated onboarding flow |
-| ✅ | Login screen (currently **simulated**, without credential validation) |
+| ✅ | Login and registration validated against MySQL |
+| ✅ | JWT authentication (Spring Security + BCrypt) |
 | ✅ | Task list loaded from the MySQL database |
 | ✅ | Create new tasks (persisted via the REST API) |
 | ✅ | Mark tasks as completed / pending (toggle) |
 | ✅ | Calendar view |
 | ✅ | Statistics screen |
 | ✅ | Settings with light / dark theme |
-| 🚧 | Per-user validated login |
 | 🚧 | Delete tasks from the UI (endpoint already exists on the backend) |
 
 ---
@@ -52,9 +52,10 @@ The UI/UX is designed in Figma. You can review the mockups here:
 └────────────────────┘                           └──────────────────┘                   └─────────┘
 ```
 
-The mobile app consumes `http://<server-ip>:8080/api/tasks`. Navigation is state-driven
-inside `App.tsx`, and tasks are fetched on startup and kept in sync with the server on
-every mutation.
+The mobile app consumes `http://<server-ip>:8080`. Navigation is state-driven inside
+`App.tsx`. Users authenticate through `/api/auth/login` and every task request is sent
+with `Authorization: Bearer <token>`. Tasks are fetched after a successful login and kept
+in sync with the server on every mutation.
 
 ---
 
@@ -79,6 +80,8 @@ every mutation.
 | Spring Boot | 4.1.1 | REST API framework |
 | Java | 21 | Language runtime |
 | Spring Data JPA | (managed) | Data access layer |
+| Spring Security + JWT | (managed) | Stateless authentication |
+| Bean Validation | (managed) | DTO validation with `@Valid` |
 | MySQL | 8 | Relational database |
 | Lombok | (managed) | Boilerplate reduction |
 | springdoc-openapi | 3.1.1 | OpenAPI 3 / Swagger UI docs |
@@ -97,18 +100,22 @@ testing-app/
 │   │   ├── constants/          # Initial/sample data
 │   │   ├── context/            # Theme (light/dark) context
 │   │   ├── screens/            # Splash, Onboarding, Login, Home, CreateTask...
-│   │   ├── services/           # TaskService (REST client)
+│   │   ├── services/           # TaskService / AuthService (REST clients)
 │   │   ├── types/              # Shared TypeScript types
 │   │   └── utils/              # Date helpers
 │   └── package.json
 │
 └── testing/                    # Spring Boot backend
+    ├── database/
+    │   └── seed_users.sql      # Manual MySQL user seed script
     ├── src/main/java/com/example/testing/
-    │   ├── Controller/         # TaskController (REST endpoints)
-    │   ├── Model/              # Task entity
-    │   ├── Repository/         # TaskRepository (JPA)
-    │   ├── Service/            # TaskService (business logic)
-    │   └── config/             # DataInitializer (seed data)
+    │   ├── Controller/         # TaskController, AuthController
+    │   ├── Dto/                # Login/Register DTOs and responses
+    │   ├── Model/              # Task and User entities
+    │   ├── Repository/         # TaskRepository, UserRepository (JPA)
+    │   ├── Security/           # JwtService, JWT filter, SecurityConfig
+    │   ├── Service/            # TaskService, AuthService
+    │   └── config/             # DataInitializer (task seed data)
     ├── src/main/resources/
     │   └── application.properties
     └── pom.xml
@@ -118,7 +125,18 @@ testing-app/
 
 ## API Endpoints
 
-Base URL: `/api/tasks`
+Base URL: `http://<server-ip>:8080`
+
+### Authentication
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | Register a user and return a JWT |
+| `POST` | `/api/auth/login` | Validate credentials and return a JWT |
+
+### Tasks
+
+All task endpoints require `Authorization: Bearer <token>`.
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
@@ -160,6 +178,16 @@ Swagger UI lets you explore and test every endpoint straight from the browser.
 | `completed` | `boolean` | Completion state |
 | `repeat` | `boolean` | Recurring task flag |
 
+`User` entity (`users` table):
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `id` | `Long` | Auto-generated primary key |
+| `name` | `String` | Display name |
+| `email` | `String` | Unique login email |
+| `password` | `String` | BCrypt password hash |
+| `role` | `String` | `USER` \| `ADMIN` |
+
 ---
 
 ## Prerequisites
@@ -190,6 +218,22 @@ spring.datasource.username=root
 spring.datasource.password=YOUR_PASSWORD
 ```
 
+Set the JWT secret (at least 32 characters) before starting the API:
+
+```powershell
+$env:JWT_SECRET = "change-this-to-a-long-random-secret"
+```
+
+```bash
+export JWT_SECRET="change-this-to-a-long-random-secret"
+```
+
+Load the sample users manually (they are **not** seeded by Java):
+
+```bash
+mysql -u root -p taskly_db < testing/database/seed_users.sql
+```
+
 Run the API:
 
 ```bash
@@ -198,12 +242,12 @@ cd testing
 ```
 
 The server starts on `http://localhost:8080`. On first run, `DataInitializer` seeds
-5 sample tasks into the database.
+5 sample tasks into the database. Users come only from `database/seed_users.sql`.
 
 ### 2. Mobile app (Expo)
 
 Install dependencies and set the backend IP the app should reach. In
-`testing-app-movil/src/services/TaskService.ts`:
+`testing-app-movil/src/services/api.ts`:
 
 ```ts
 const SERVER_IP = "192.168.100.11"; // <-- use your machine's LAN IP
@@ -227,11 +271,11 @@ npx expo start
 
 Planned and upcoming work:
 
-- [ ] **Per-user validated login** — real authentication instead of the current simulation.
+- [x] **Per-user validated login** — JWT authentication with login and registration.
 - [ ] **Delete tasks from the UI** — the backend endpoint already exists; wire it into the app.
 - [ ] Task editing and better filtering / search.
 - [ ] Notifications and reminders for scheduled tasks.
-- [ ] Multi-user support.
+- [ ] Multi-user support (tasks owned by each user).
 
 ---
 
