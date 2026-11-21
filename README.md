@@ -275,7 +275,7 @@ Planned and upcoming work:
 - [ ] **Delete tasks from the UI** — the backend endpoint already exists; wire it into the app.
 - [ ] Task editing and better filtering / search.
 - [ ] Notifications and reminders for scheduled tasks.
-- [ ] Multi-user support (tasks owned by each user).
+- [x] Multi-user support (tasks owned by each user).
 
 ---
 
