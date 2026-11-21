@@ -276,7 +276,7 @@ Trabajo planificado y próximo:
 - [ ] **Eliminación de tareas desde la interfaz** — el endpoint ya existe en el backend; falta conectarlo en la app.
 - [ ] Edición de tareas y mejor filtrado / búsqueda.
 - [ ] Notificaciones y recordatorios para tareas programadas.
-- [ ] Soporte multiusuario (tareas asociadas a cada usuario).
+- [x] Soporte multiusuario (tareas asociadas a cada usuario).
 
 ---
 
