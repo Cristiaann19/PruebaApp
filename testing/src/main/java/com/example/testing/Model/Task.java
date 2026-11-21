@@ -3,6 +3,8 @@ package com.example.testing.Model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -28,14 +30,20 @@ public class Task {
     private LocalTime time;
 
     @Column(nullable = false)
-    private String priority; // "Baja", "Media", "Alta"
+    private String priority;
 
     @Column(nullable = false)
-    private String category; // "General", "Estudio", "Trabajo", "Personal"
+    private String category;
 
     @Column(nullable = false)
     private boolean completed;
 
     @Column(name = "is_repeat", nullable = false)
     private boolean repeat;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private User user;
 }
