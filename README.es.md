@@ -273,10 +273,9 @@ npx expo start
 Trabajo planificado y próximo:
 
 - [x] **Login validado por usuario** — autenticación con JWT, login y registro.
-- [ ] **Eliminación de tareas desde la interfaz** — el endpoint ya existe en el backend; falta conectarlo en la app.
-- [ ] Edición de tareas y mejor filtrado / búsqueda.
-- [ ] Notificaciones y recordatorios para tareas programadas.
-- [ ] Soporte multiusuario (tareas asociadas a cada usuario).
+- [x] **Eliminación de tareas desde la interfaz** — el endpoint ya existe en el backend; falta conectarlo en la app.
+- [x] Edición de tareas y mejor filtrado / búsqueda.
+- [x] Soporte multiusuario (tareas asociadas a cada usuario).
 
 ---
 

@@ -272,10 +272,9 @@ npx expo start
 Planned and upcoming work:
 
 - [x] **Per-user validated login** — JWT authentication with login and registration.
-- [ ] **Delete tasks from the UI** — the backend endpoint already exists; wire it into the app.
-- [ ] Task editing and better filtering / search.
-- [ ] Notifications and reminders for scheduled tasks.
-- [ ] Multi-user support (tasks owned by each user).
+- [x] **Delete tasks from the UI** — the backend endpoint already exists; wire it into the app.
+- [x] Task editing and better filtering / search.
+- [x] Multi-user support (tasks owned by each user).
 
 ---
 
