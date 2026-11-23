@@ -31,7 +31,9 @@ yarn-error.*
 *.pem
 
 # local env files
-.env*.local
+.env
+.env.*
+!.env.example
 
 # typescript
 *.tsbuildinfo
@@ -44,3 +46,4 @@ AGENTS.md
 .idea
 .vscode
 .agents
+
