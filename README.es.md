@@ -40,7 +40,7 @@ La interfaz está diseñada en Figma. Puedes revisar los mockups aquí:
 | ✅ | Vista de calendario |
 | ✅ | Pantalla de estadísticas |
 | ✅ | Ajustes con tema claro / oscuro |
-| 🚧 | Eliminación de tareas desde la interfaz (el endpoint ya existe en el backend) |
+| ✅ | Eliminación de tareas desde la interfaz (el endpoint ya existe en el backend) |
 
 ---
 
