@@ -1,7 +1,7 @@
-# Taskly — App de gestión de tareas
-
+# Taskly — App de Gestión de Tareas
+ 
 > 🇬🇧 [Read in English](./README.md)
-
+ 
 [![Expo](https://img.shields.io/badge/Expo-57-000020?logo=expo&logoColor=white)](https://expo.dev)
 [![React Native](https://img.shields.io/badge/React%20Native-0.86-61DAFB?logo=react&logoColor=black)](https://reactnative.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
@@ -9,60 +9,66 @@
 [![Java](https://img.shields.io/badge/Java-21-007396?logo=openjdk&logoColor=white)](https://openjdk.org)
 [![MySQL](https://img.shields.io/badge/MySQL-8-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./testing-app-movil/LICENSE)
-
+ 
 **Taskly** es una aplicación móvil de gestión de tareas que consume un backend REST con
-persistencia en MySQL. Es un punto de partida simple y bien estructurado para una app de
-productividad: crear tareas, verlas por fecha, marcarlas como completadas y seguir tu
-progreso — todo respaldado por una base de datos real.
-
+almacenamiento persistente en MySQL. Es un punto de partida sencillo y bien estructurado
+para una app de productividad: regístrate, crea tareas, edítalas y búscalas, consúltalas
+por fecha, márcalas como completadas y sigue tu progreso, todo respaldado por una base de
+datos real y separado por usuario.
+ 
 Este repositorio es un **monorepo** que contiene tanto el cliente móvil como la API backend.
-
+ 
 ---
-
+ 
 ## Diseño / Mockups
-
+ 
 La interfaz está diseñada en Figma. Puedes revisar los mockups aquí:
-
+ 
 **[Taskly — Diseño en Figma](https://www.figma.com/design/1svjRo8ZtfiJJimHohVV9J/Testing-App?t=A6wCqv2DzLz1jmvw-1)**
-
+ 
 ---
-
-## Características
-
-| Estado | Característica |
+ 
+## Funcionalidades
+ 
+| Estado | Funcionalidad |
 | :---: | :--- |
-| ✅ | Splash screen y flujo de onboarding |
-| ✅ | Login y registro validados contra MySQL |
-| ✅ | Autenticación con JWT (Spring Security + BCrypt) |
-| ✅ | Lista de tareas cargada desde la base de datos MySQL |
-| ✅ | Crear nuevas tareas (persistidas vía la API REST) |
+| ✅ | Pantalla de bienvenida (splash) y onboarding animado |
+| ✅ | Inicio de sesión y registro validados contra MySQL |
+| ✅ | Autenticación JWT (Spring Security + BCrypt) |
+| ✅ | Multiusuario: cada usuario solo ve y gestiona sus propias tareas |
+| ✅ | Crear, editar y eliminar tareas (persistidas mediante la API REST) |
 | ✅ | Marcar tareas como completadas / pendientes (toggle) |
+| ✅ | Búsqueda por texto (título / descripción) y filtro por estado |
+| ✅ | Selectores nativos de fecha y hora |
+| ✅ | Saludo personalizado con el nombre del usuario que inició sesión |
 | ✅ | Vista de calendario |
 | ✅ | Pantalla de estadísticas |
 | ✅ | Ajustes con tema claro / oscuro |
-| 🚧 | Eliminación de tareas desde la interfaz (el endpoint ya existe en el backend) |
-
+ 
 ---
-
+ 
 ## Arquitectura
-
+ 
 ```
-┌────────────────────┐      REST / JSON      ┌──────────────────┐       JPA        ┌─────────┐
-│  Móvil (Expo/RN)   │  ⇄  /api/tasks  ⇄     │  API Spring Boot │  ⇄            ⇄  │  MySQL  │
-└────────────────────┘                       └──────────────────┘                  └─────────┘
+┌────────────────────┐        REST / JSON        ┌──────────────────┐        JPA        ┌─────────┐
+│  Móvil (Expo/RN)   │  ⇄  /api/tasks  ⇄         │  API Spring Boot │  ⇄             ⇄  │  MySQL  │
+└────────────────────┘                           └──────────────────┘                   └─────────┘
 ```
-
-La app móvil consume `http://<ip-servidor>:8080`. La navegación está basada en estado
-dentro de `App.tsx`. Los usuarios se autentican con `/api/auth/login` y cada petición de
-tareas se envía con `Authorization: Bearer <token>`. Las tareas se obtienen tras un login
-correcto y se sincronizan con el servidor en cada modificación.
-
+ 
+La app móvil consume `http://<ip-del-servidor>:8080`. La navegación se maneja por estado
+dentro de `App.tsx`. Los usuarios se autentican mediante `/api/auth/login` y cada petición
+de tareas se envía con `Authorization: Bearer <token>`.
+ 
+El backend nunca confía en el cliente para saber quién es el usuario: el dueño de la tarea
+siempre se obtiene del JWT. Las tareas se cargan tras un inicio de sesión exitoso y se
+mantienen sincronizadas con el servidor en cada modificación.
+ 
 ---
-
-## Stack tecnológico
-
+ 
+## Stack Tecnológico
+ 
 ### Móvil (`testing-app-movil/`)
-
+ 
 | Tecnología | Versión | Propósito |
 | :--- | :--- | :--- |
 | Expo | SDK 57 | Plataforma y herramientas de desarrollo |
@@ -70,36 +76,38 @@ correcto y se sincronizan con el servidor en cada modificación.
 | React | 19.2.3 | Librería de UI |
 | TypeScript | ~6.0 | Tipado estático |
 | react-native-svg | 15.15.4 | Iconos |
-| AsyncStorage | 2.2.0 | Persistencia local |
+| AsyncStorage | 2.2.0 | Persistencia local (sesión y token) |
+| @react-native-community/datetimepicker | (gestionada por Expo) | Selectores nativos de fecha / hora |
 | expo-status-bar | ~57.0.1 | Control de la barra de estado |
-
+ 
 ### Backend (`testing/`)
-
+ 
 | Tecnología | Versión | Propósito |
 | :--- | :--- | :--- |
 | Spring Boot | 4.1.1 | Framework de la API REST |
-| Java | 21 | Runtime del lenguaje |
-| Spring Data JPA | (gestionado) | Capa de acceso a datos |
-| Spring Security + JWT | (gestionado) | Autenticación stateless |
-| Bean Validation | (gestionado) | Validación de DTOs con `@Valid` |
+| Java | 21 | Entorno de ejecución |
+| Spring Data JPA | (gestionada) | Capa de acceso a datos |
+| Spring Security + JWT | (gestionada) | Autenticación sin estado |
+| Bean Validation | (gestionada) | Validación de DTOs con `@Valid` |
 | MySQL | 8 | Base de datos relacional |
-| Lombok | (gestionado) | Reducción de boilerplate |
+| Lombok | (gestionada) | Reducción de código repetitivo |
 | springdoc-openapi | 3.1.1 | Documentación OpenAPI 3 / Swagger UI |
-| Maven | wrapper (`mvnw`) | Herramienta de build |
-
+| Maven | wrapper (`mvnw`) | Herramienta de compilación |
+ 
 ---
-
-## Estructura del repositorio
-
+ 
+## Estructura del Repositorio
+ 
 ```
 testing-app/
 ├── testing-app-movil/          # Cliente móvil Expo / React Native
 │   ├── App.tsx                 # Punto de entrada y navegación por estado
+│   ├── .env.example            # Plantilla para la URL de la API
 │   ├── src/
-│   │   ├── components/         # Componentes de UI reutilizables
+│   │   ├── components/         # Componentes reutilizables (TaskRow, Button, Field...)
 │   │   ├── constants/          # Datos iniciales / de ejemplo
 │   │   ├── context/            # Contexto de tema (claro/oscuro)
-│   │   ├── screens/            # Splash, Onboarding, Login, Home, CreateTask...
+│   │   ├── screens/            # Splash, Onboarding, Login, Home, CreateTask (crear + editar)...
 │   │   ├── services/           # TaskService / AuthService (clientes REST)
 │   │   ├── types/              # Tipos TypeScript compartidos
 │   │   └── utils/              # Utilidades de fechas
@@ -107,178 +115,216 @@ testing-app/
 │
 └── testing/                    # Backend Spring Boot
     ├── database/
-    │   └── seed_users.sql      # Script manual de usuarios para MySQL
+    │   └── seed_users.sql      # Script manual para cargar usuarios en MySQL
     ├── src/main/java/com/example/testing/
-    │   ├── Controller/         # TaskController, AuthController
-    │   ├── Dto/                # DTOs de login/registro y respuestas
+    │   ├── Controller/         # TaskController, AuthController, GlobalExceptionHandler
+    │   ├── Dto/                # DTOs de autenticación, TaskRequest, TaskResponse, UserResponse
     │   ├── Model/              # Entidades Task y User
     │   ├── Repository/         # TaskRepository, UserRepository (JPA)
     │   ├── Security/           # JwtService, filtro JWT, SecurityConfig
     │   ├── Service/            # TaskService, AuthService
-    │   └── config/             # DataInitializer (datos de tareas)
+    │   └── config/             # DataInitializer (tareas de ejemplo), OpenApiConfig
     ├── src/main/resources/
     │   └── application.properties
     └── pom.xml
 ```
-
+ 
 ---
-
+ 
 ## Endpoints de la API
-
-URL base: `http://<ip-servidor>:8080`
-
+ 
+URL base: `http://<ip-del-servidor>:8080`
+ 
 ### Autenticación
-
+ 
 | Método | Endpoint | Descripción |
 | :--- | :--- | :--- |
 | `POST` | `/api/auth/register` | Registra un usuario y devuelve un JWT |
 | `POST` | `/api/auth/login` | Valida credenciales y devuelve un JWT |
-
+ 
+La respuesta contiene el token y los datos públicos del usuario (`id`, `name`, `email`, `role`).
+ 
 ### Tareas
-
-Todos los endpoints de tareas requieren `Authorization: Bearer <token>`.
-
+ 
+Todos los endpoints de tareas requieren `Authorization: Bearer <token>` y solo operan sobre
+**las tareas del usuario autenticado**. Pedir una tarea que pertenece a otro usuario
+devuelve `404`.
+ 
 | Método | Endpoint | Descripción |
 | :--- | :--- | :--- |
-| `GET` | `/api/tasks` | Lista todas las tareas (ordenadas por fecha y hora) |
-| `GET` | `/api/tasks/{id}` | Obtiene una tarea por su ID |
-| `POST` | `/api/tasks` | Crea una nueva tarea |
-| `PUT` | `/api/tasks/{id}` | Actualiza una tarea existente |
+| `GET` | `/api/tasks` | Lista mis tareas (ordenadas por fecha y hora) |
+| `GET` | `/api/tasks/{id}` | Obtiene una de mis tareas por ID |
+| `POST` | `/api/tasks` | Crea una tarea (el dueño se toma del JWT) |
+| `PUT` | `/api/tasks/{id}` | Actualiza una de mis tareas |
 | `PATCH` | `/api/tasks/{id}/toggle` | Alterna completada / pendiente |
-| `DELETE` | `/api/tasks/{id}` | Elimina una tarea |
-
+| `DELETE` | `/api/tasks/{id}` | Elimina una de mis tareas |
+ 
 ---
-
+ 
 ## Documentación de la API (OpenAPI / Swagger)
-
-La API REST está documentada con **OpenAPI 3** usando
-[springdoc-openapi](https://springdoc.org). Con el backend en ejecución obtienes:
-
-- **Swagger UI (interactiva):** <http://localhost:8080/swagger-ui.html>
+ 
+La API REST está documentada con **OpenAPI 3** mediante
+[springdoc-openapi](https://springdoc.org). Con el backend en ejecución dispones de:
+ 
+- **Swagger UI (interactivo):** <http://localhost:8080/swagger-ui.html>
 - **Contrato OpenAPI (JSON):** <http://localhost:8080/v3/api-docs>
 - **Contrato OpenAPI (YAML):** <http://localhost:8080/v3/api-docs.yaml>
-
-Swagger UI te permite explorar y probar cada endpoint directamente desde el navegador.
-
+Swagger UI permite explorar y probar cada endpoint directamente desde el navegador. Usa el
+botón **Authorize** con un token obtenido de `/api/auth/login`.
+ 
 ---
-
-## Modelo de datos
-
+ 
+## Modelo de Datos
+ 
 Entidad `Task` (tabla `tasks`):
-
+ 
 | Campo | Tipo | Descripción |
 | :--- | :--- | :--- |
 | `id` | `Long` | Clave primaria autogenerada |
 | `title` | `String` | Título de la tarea (obligatorio) |
 | `description` | `String` | Detalles opcionales |
-| `date` | `LocalDate` | Fecha de vencimiento (obligatoria) |
-| `time` | `LocalTime` | Hora de vencimiento (obligatoria) |
+| `date` | `LocalDate` | Fecha límite (obligatoria) |
+| `time` | `LocalTime` | Hora límite (obligatoria) |
 | `priority` | `String` | `Baja` \| `Media` \| `Alta` |
 | `category` | `String` | `General` \| `Estudio` \| `Trabajo` \| `Personal` |
-| `completed` | `boolean` | Estado de finalización |
-| `repeat` | `boolean` | Marca de tarea recurrente |
-
+| `completed` | `boolean` | Estado de completado |
+| `repeat` | `boolean` | Indica si la tarea se repite |
+| `user` | `User` | Dueño de la tarea (clave foránea `user_id`, `@ManyToOne`) |
+ 
+> El dueño nunca lo envía el cliente: el backend lo obtiene del JWT.
+> Las respuestas usan DTOs `TaskResponse`, por lo que los datos del usuario (como el hash de la contraseña) nunca se exponen.
+ 
 Entidad `User` (tabla `users`):
-
+ 
 | Campo | Tipo | Descripción |
 | :--- | :--- | :--- |
 | `id` | `Long` | Clave primaria autogenerada |
-| `name` | `String` | Nombre visible |
-| `email` | `String` | Correo de login único |
+| `name` | `String` | Nombre a mostrar |
+| `email` | `String` | Correo único de inicio de sesión |
 | `password` | `String` | Hash BCrypt de la contraseña |
 | `role` | `String` | `USER` \| `ADMIN` |
-
+ 
 ---
-
-## Requisitos previos
-
+ 
+## Requisitos Previos
+ 
 - **Node.js** 18+ y npm
-- **Expo** (`npx expo`)
+- Herramientas de **Expo** (`npx expo`)
 - **JDK 21**
 - **Maven** (se incluye el wrapper `mvnw`)
 - **MySQL** 8 ejecutándose localmente
-
 ---
-
-## Puesta en marcha
-
+ 
+## Puesta en Marcha
+ 
 ### 1. Backend (Spring Boot + MySQL)
-
+ 
 Crea la base de datos:
-
+ 
 ```sql
 CREATE DATABASE taskly_db;
 ```
-
-Configura la conexión en `testing/src/main/resources/application.properties`:
-
+ 
+La conexión se configura en `testing/src/main/resources/application.properties`
+mediante variables de entorno, de modo que no se guarda nada sensible en el repositorio:
+ 
 ```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/taskly_db?useSSL=false&serverTimezone=UTC
-spring.datasource.username=root
-spring.datasource.password=TU_PASSWORD
+spring.datasource.url=${DB_URL:jdbc:mysql://localhost:3306/taskly_db?useSSL=false&serverTimezone=UTC}
+spring.datasource.username=${DB_USER:root}
+spring.datasource.password=${DB_PASSWORD}
 ```
-
-Define el secreto JWT (mínimo 32 caracteres) antes de arrancar la API:
-
+ 
+Define las variables de entorno antes de iniciar la API (`JWT_SECRET` debe tener al
+menos 32 caracteres):
+ 
 ```powershell
-$env:JWT_SECRET = "cambia-esto-por-un-secreto-largo-y-aleatorio"
+$env:DB_PASSWORD = "tu-clave-de-mysql"
+$env:JWT_SECRET  = "cambia-esto-por-un-secreto-largo-y-aleatorio"
 ```
-
+ 
 ```bash
+export DB_PASSWORD="tu-clave-de-mysql"
 export JWT_SECRET="cambia-esto-por-un-secreto-largo-y-aleatorio"
 ```
-
-Carga los usuarios de ejemplo manualmente (**no** se inicializan desde Java):
-
+ 
+> En IntelliJ IDEA: *Run → Edit Configurations → Environment variables*.
+ 
+Carga **primero** los usuarios de ejemplo (Java **no** los inserta automáticamente):
+ 
 ```bash
 mysql -u root -p taskly_db < testing/database/seed_users.sql
 ```
-
-Ejecuta la API:
-
+ 
+Luego ejecuta la API:
+ 
 ```bash
 cd testing
 ./mvnw spring-boot:run
 ```
-
-El servidor arranca en `http://localhost:8080`. En la primera ejecución,
-`DataInitializer` inserta 5 tareas de ejemplo en la base de datos. Los usuarios
-provienen únicamente de `database/seed_users.sql`.
-
+ 
+El servidor arranca en `http://localhost:8080`. En la primera ejecución, `DataInitializer`
+inserta 5 tareas de ejemplo (3 para `ana@taskly.com` y 2 para `luis@taskly.com`). Si esos
+usuarios aún no existen, se omite la carga y se muestra una advertencia; basta con reiniciar
+la API después de cargar `seed_users.sql`.
+ 
+> **Cuentas de demostración** (solo desarrollo): `admin@taskly.com`, `ana@taskly.com` y
+> `luis@taskly.com`, con las contraseñas indicadas en `seed_users.sql`.
+> Cámbialas (sobre todo la de admin) antes de cualquier despliegue real.
+ 
 ### 2. App móvil (Expo)
-
-Instala las dependencias y define la IP del backend a la que se conectará la app. En
-`testing-app-movil/src/services/api.ts`:
-
-```ts
-const SERVER_IP = "192.168.100.11"; // <-- usa la IP LAN de tu máquina
-```
-
-Luego inicia la app:
-
+ 
+Instala las dependencias:
+ 
 ```bash
 cd testing-app-movil
 npm install
-npx expo start
 ```
-
-> El teléfono/emulador debe estar en la misma red que el backend y poder alcanzar el
-> puerto `8080`. Usa la IP LAN de tu máquina (no `localhost`) para que un dispositivo
-> físico pueda conectarse.
-
+ 
+Crea un archivo `.env` (cópialo desde `.env.example`) con la URL del backend:
+ 
+```
+EXPO_PUBLIC_API_URL=http://192.168.x.x:8080
+```
+ 
+Usa la IP de tu máquina en la red local, **no** `localhost`, para que un dispositivo físico
+pueda conectarse. El teléfono o emulador debe estar en la misma red que el backend y poder
+alcanzar el puerto `8080`.
+ 
+Inicia la app (la opción `-c` limpia la caché para que Expo lea la variable):
+ 
+```bash
+npx expo start -c
+```
+ 
+> Toda variable que empiece con `EXPO_PUBLIC_` queda incluida dentro de la app. Úsala solo
+> para URLs, nunca para claves privadas.
+ 
 ---
-
-## Roadmap
-
-Trabajo planificado y próximo:
-
-- [x] **Login validado por usuario** — autenticación con JWT, login y registro.
-- [x] **Eliminación de tareas desde la interfaz** — el endpoint ya existe en el backend; falta conectarlo en la app.
-- [x] Edición de tareas y mejor filtrado / búsqueda.
-- [x] Soporte multiusuario (tareas asociadas a cada usuario).
-
+ 
+## Probar el Comportamiento Multiusuario
+ 
+1. Inicia sesión con `ana@taskly.com` → deberías ver **3 tareas** y el saludo *"Hola, Ana"*.
+2. Cierra sesión e inicia con `luis@taskly.com` → deberías ver **2 tareas**.
+3. Con el token de Luis, llama a `GET /api/tasks/{id}` usando el ID de una tarea de Ana →
+   la API debe responder **404**.
 ---
-
+ 
+## Hoja de Ruta
+ 
+Completado:
+ 
+- [x] **Login validado por usuario** — autenticación JWT con inicio de sesión y registro.
+- [x] **Eliminar tareas desde la UI** — conectado al endpoint del backend.
+- [x] **Edición y búsqueda de tareas** — edición de todos los campos; búsqueda por texto y filtro por estado.
+- [x] **Soporte multiusuario** — cada tarea pertenece a un usuario.
+Planificado:
+ 
+- [ ] Filtros por prioridad y categoría.
+- [ ] HTTPS y CORS restringido para producción.
+- [ ] Migraciones de base de datos (Flyway) y pruebas automatizadas.
+---
+ 
 ## Licencia
-
+ 
 Distribuido bajo la Licencia MIT. Consulta [`testing-app-movil/LICENSE`](./testing-app-movil/LICENSE) para más detalles.
+ 
