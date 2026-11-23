@@ -40,7 +40,7 @@ The UI/UX is designed in Figma. You can review the mockups here:
 | ✅ | Calendar view |
 | ✅ | Statistics screen |
 | ✅ | Settings with light / dark theme |
-| 🚧 | Delete tasks from the UI (endpoint already exists on the backend) |
+| ✅ | Delete tasks from the UI (endpoint already exists on the backend) |
 
 ---
 
