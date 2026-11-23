@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {useCallback, useEffect, useMemo, useState} from "react";
 import {
     SafeAreaView,
     StatusBar,
@@ -7,33 +7,40 @@ import {
     View,
 } from "react-native";
 
-import { ThemeProvider, useTheme } from "./src/context/ThemeContext";
+import {ThemeProvider, useTheme} from "./src/context/ThemeContext";
 
-import { Screen, Task } from "./src/types";
-import { Icon } from "./src/components/common/Icon";
+import {Screen, Task} from "./src/types";
+import {Icon} from "./src/components/common/Icon";
 import {
     fetchTasks,
     postTask,
     toggleTaskInServer,
+    deleteTaskFromServer,
+    updateTaskInServer,
 } from "./src/services/TaskService";
-import { clearSession, getToken } from "./src/services/AuthService";
-
-import { SplashScreen } from "./src/screens/SplashScreen";
-import { OnboardingScreen } from "./src/screens/OnboardingScreen";
-import { LoginScreen } from "./src/screens/LoginScreen";
-import { HomeScreen } from "./src/screens/HomeScreen";
-import { CreateTaskScreen } from "./src/screens/CreateTaskScreen";
-import { CalendarScreen } from "./src/screens/CalendarScreen";
-import { StatsScreen } from "./src/screens/StatsScreen";
-import { SettingsScreen } from "./src/screens/SettingsScreen";
+import {clearSession, getToken, getStoredUser} from "./src/services/AuthService";
+import {SplashScreen} from "./src/screens/SplashScreen";
+import {OnboardingScreen} from "./src/screens/OnboardingScreen";
+import {LoginScreen} from "./src/screens/LoginScreen";
+import {HomeScreen} from "./src/screens/HomeScreen";
+import {CreateTaskScreen} from "./src/screens/CreateTaskScreen";
+import {CalendarScreen} from "./src/screens/CalendarScreen";
+import {StatsScreen} from "./src/screens/StatsScreen";
+import {SettingsScreen} from "./src/screens/SettingsScreen";
 
 function MainApp() {
-    const { colors, isDark } = useTheme();
-
+    const {colors, isDark} = useTheme();
+    const [userName, setUserName] = useState<string>("");
     const [screen, setScreen] = useState<Screen>("splash");
     const [toast, setToast] = useState<string>("");
     // Ahora la lista inicia vacía y se llena con lo que venga de MySQL
     const [tasks, setTasks] = useState<Task[]>([]);
+    const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+
+    const loadUserName = useCallback(async () => {
+        const user = await getStoredUser();
+        setUserName(user?.name ?? "");
+    }, []);
 
     // 1. FUNCIÓN: Cargar las tareas desde Spring Boot (MySQL)
     const loadTasksFromBackend = useCallback(async () => {
@@ -46,6 +53,7 @@ function MainApp() {
             if (error instanceof Error && error.message.includes("HTTP 401")) {
                 await clearSession();
                 setTasks([]);
+                setUserName("");
                 setScreen("login");
                 return;
             }
@@ -63,12 +71,13 @@ function MainApp() {
                 return;
             }
 
+            await loadUserName();
             setScreen("home");
             await loadTasksFromBackend();
         };
 
         restoreSession();
-    }, [loadTasksFromBackend]);
+    }, [loadTasksFromBackend, loadUserName]);
 
     // 2. EFECTO: Temporizador de la pantalla Splash (1.5 segundos)
     useEffect(() => {
@@ -88,6 +97,7 @@ function MainApp() {
 
     // Entra al home solo después de un login/registro exitoso
     const enter = async () => {
+        await loadUserName();   // NUEVO
         setScreen("home");
         await loadTasksFromBackend();
     };
@@ -96,6 +106,7 @@ function MainApp() {
     const logout = async () => {
         await clearSession();
         setTasks([]);
+        setUserName("");
         setScreen("login");
     };
 
@@ -128,9 +139,64 @@ function MainApp() {
         }
     };
 
+    /**
+     * 5. FUNCIÓN: Eliminar una tarea de la base de datos MySQL.
+     */
+    const deleteTask = async (id: number) => {
+        if (id == null || !Number.isInteger(id) || id <= 0) {
+            console.error("ID inválido al eliminar la tarea:", id);
+            setToast("No se encontró el ID de la tarea");
+            return;
+        }
+
+        try {
+            console.log("Eliminando tarea con ID:", id);
+
+            await deleteTaskFromServer(id);
+
+            setTasks((currentTasks) => currentTasks.filter((task) => task.id !== id));
+            setToast("Tarea eliminada");
+        } catch (error) {
+            console.error("No se pudo eliminar la tarea:", error);
+            setToast("Error al eliminar la tarea");
+        }
+    };
 
     /**
-     * 5. FUNCIÓN: Crear una nueva tarea y guardarla en MySQL.
+     * 6. FUNCIÓN: Iniciar la edición de una tarea existente.
+     */
+    const startEdit = (task: Task) => {
+        setTaskToEdit(task);
+        setScreen("edit");
+    };
+
+    /**
+     * 7. FUNCIÓN: Editar una tarea existente y guardarla en MySQL.
+     */
+    const editTask = async (id: number, data: Omit<Task, "id">) => {
+        try {
+            console.log("Editando tarea con ID:", id, data);
+
+            const updatedTask = await updateTaskInServer(id, data);
+
+            setTasks((currentTasks) =>
+                currentTasks.map((task) =>
+                    task.id === id ? updatedTask : task
+                )
+            );
+
+            setTaskToEdit(null);
+            setToast("Tarea actualizada");
+            setScreen("home");
+        } catch (error) {
+            console.error("No se pudo editar la tarea:", error);
+            setToast("Error al actualizar la tarea");
+        }
+    };
+
+
+    /**
+     * 8. FUNCIÓN: Crear una nueva tarea y guardarla en MySQL.
      */
     const addTask = async (newTaskData: Omit<Task, "id" | "completed">) => {
         try {
@@ -158,7 +224,7 @@ function MainApp() {
     const content = useMemo(() => {
         switch (screen) {
             case "splash":
-                return <SplashScreen />;
+                return <SplashScreen/>;
             case "onboarding-1":
             case "onboarding-2":
             case "onboarding-3": {
@@ -176,13 +242,28 @@ function MainApp() {
                 );
             }
             case "login":
-                return <LoginScreen enter={enter} />;
+                return <LoginScreen enter={enter}/>;
             case "home":
                 return (
                     <HomeScreen
                         tasks={tasks}
+                        userName={userName}
                         navigate={navigate}
                         toggle={toggleTask}
+                        delete={deleteTask}
+                        edit={startEdit}
+                    />
+                );
+            case "edit":
+                if (!taskToEdit) return null;
+                return (
+                    <CreateTaskScreen
+                        task={taskToEdit ?? undefined}
+                        editTask={editTask}
+                        cancel={() => {
+                            setTaskToEdit(null);
+                            setScreen("home");
+                        }}
                     />
                 );
             case "create":
@@ -193,9 +274,9 @@ function MainApp() {
                     />
                 );
             case "calendar":
-                return <CalendarScreen tasks={tasks} navigate={navigate} />;
+                return <CalendarScreen tasks={tasks} navigate={navigate}/>;
             case "stats":
-                return <StatsScreen tasks={tasks} navigate={navigate} />;
+                return <StatsScreen tasks={tasks} navigate={navigate}/>;
             case "settings":
                 return (
                     <SettingsScreen
@@ -204,7 +285,7 @@ function MainApp() {
                     />
                 );
         }
-    }, [screen, tasks]);
+    }, [screen, tasks, taskToEdit, userName]);
 
     return (
         <SafeAreaView
@@ -226,7 +307,7 @@ function MainApp() {
             {toast !== "" && (
                 <View style={styles.toast}>
                     <View style={styles.toastIcon}>
-                        <Icon name="check" size={16} color="#FFFFFF" />
+                        <Icon name="check" size={16} color="#FFFFFF"/>
                     </View>
                     <Text style={styles.toastText}>{toast}</Text>
                 </View>
@@ -241,7 +322,7 @@ function MainApp() {
 export default function App() {
     return (
         <ThemeProvider>
-            <MainApp />
+            <MainApp/>
         </ThemeProvider>
     );
 }
@@ -265,7 +346,7 @@ const styles = StyleSheet.create({
         borderRadius: 30,
         elevation: 6,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 3 },
+        shadowOffset: {width: 0, height: 3},
         shadowOpacity: 0.25,
         shadowRadius: 5,
     },

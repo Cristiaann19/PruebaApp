@@ -16,33 +16,38 @@ import {Button} from "../components/common/Button";
 import {Field} from "../components/common/Field";
 import {Header} from "../components/common/Header";
 import {Icon} from "../components/common/Icon";
+import DateTimePicker, {DateTimePickerEvent} from "@react-native-community/datetimepicker";
 
 type CreateTaskScreenProps = {
-    addTask: (task: Omit<Task, "id" | "completed">) => void;
+    addTask?: (task: Omit<Task, "id" | "completed">) => void;
+    editTask?: (id: number, data: Omit<Task, "id">) => void;
+    task?: Task;
     cancel: () => void;
 };
 
-export function CreateTaskScreen({addTask, cancel}: CreateTaskScreenProps) {
+export function CreateTaskScreen({addTask, editTask, task, cancel}: CreateTaskScreenProps) {
     const {colors} = useTheme();
-    // Estados para cada campo del formulario
-    const [title, setTitle] = useState("");
-    const [description, setDescription] = useState("");
-    const [date, setDate] = useState(isoDate(today));
-    const [time, setTime] = useState("09:00");
-    const [priority, setPriority] = useState<Priority>("Media");
-    const [category, setCategory] = useState<Category>("General");
-    const [repeat, setRepeat] = useState(false);
-    const [error, setError] = useState("");
+    const isEditing = !!task;
 
-    /**
-     * Valida que el título no esté vacío y envía la nueva tarea a App.tsx.
-     */
+    const [title, setTitle] = useState(task?.title ?? "");
+    const [description, setDescription] = useState(task?.description ?? "");
+    const [date, setDate] = useState(task?.date ?? isoDate(today));
+    const [time, setTime] = useState(task?.time?.slice(0, 5) ?? "09:00");
+    const [priority, setPriority] = useState<Priority>(task?.priority ?? "Media");
+    const [category, setCategory] = useState<Category>(task?.category ?? "General");
+    const [repeat, setRepeat] = useState(task?.repeat ?? false);
+    const [error, setError] = useState("");
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [showTimePicker, setShowTimePicker] = useState(false);
+
+
     const handleSubmit = () => {
         if (!title.trim()) {
             setError("Escribe un título para continuar");
             return;
         }
-        addTask({
+
+        const payload = {
             title: title.trim(),
             description,
             date,
@@ -50,7 +55,34 @@ export function CreateTaskScreen({addTask, cancel}: CreateTaskScreenProps) {
             priority,
             category,
             repeat,
-        });
+        };
+
+        if (task && editTask) {
+            // Conservamos "completed" para no reabrir una tarea ya terminada
+            editTask(task.id, {...payload, completed: task.completed});
+        } else {
+            addTask?.(payload);
+        }
+    };
+
+    const pad = (n: number) => String(n).padStart(2, "0");
+
+    const toDateObject = (d: string, t: string): Date => {
+        const [y, m, day] = d.split("-").map(Number);
+        const [h, min] = t.split(":").map(Number);
+        return new Date(y, (m || 1) - 1, day || 1, h || 0, min || 0);
+    };
+
+    const onChangeDate = (event: DateTimePickerEvent, selected?: Date) => {
+        setShowDatePicker(Platform.OS === "ios"); // en Android se cierra solo
+        if (event.type === "dismissed" || !selected) return;
+        setDate(`${selected.getFullYear()}-${pad(selected.getMonth() + 1)}-${pad(selected.getDate())}`);
+    };
+
+    const onChangeTime = (event: DateTimePickerEvent, selected?: Date) => {
+        setShowTimePicker(Platform.OS === "ios");
+        if (event.type === "dismissed" || !selected) return;
+        setTime(`${pad(selected.getHours())}:${pad(selected.getMinutes())}`);
     };
 
     return (
@@ -65,7 +97,7 @@ export function CreateTaskScreen({addTask, cancel}: CreateTaskScreenProps) {
             >
                 {/* Barra superior con botón de volver y enlace "Guardar" */}
                 <Header
-                    title="Nueva tarea"
+                    title={isEditing ? "Editar tarea" : "Nueva tarea"}
                     back={cancel}
                     action={
                         <TouchableOpacity onPress={handleSubmit}>
@@ -105,25 +137,36 @@ export function CreateTaskScreen({addTask, cancel}: CreateTaskScreenProps) {
                 {/* 3. Fila doble: Fecha y Hora */}
                 <View style={styles.formRow}>
                     <Field label="Fecha" icon="calendar">
-                        <TextInput
-                            style={[styles.input, {color: colors.text}]}
-                            value={date}
-                            onChangeText={setDate}
-                            placeholder="AAAA-MM-DD"
-                            placeholderTextColor={colors.subtext}
-                        />
+                        <TouchableOpacity style={styles.pickerBtn} onPress={() => setShowDatePicker(true)}>
+                            <Text style={[styles.pickerText, {color: colors.text}]}>{date}</Text>
+                        </TouchableOpacity>
                     </Field>
 
                     <Field label="Hora" icon="clock">
-                        <TextInput
-                            style={[styles.input, {color: colors.text}]}
-                            value={time}
-                            onChangeText={setTime}
-                            placeholder="09:00"
-                            placeholderTextColor={colors.subtext}
-                        />
+                        <TouchableOpacity style={styles.pickerBtn} onPress={() => setShowTimePicker(true)}>
+                            <Text style={[styles.pickerText, {color: colors.text}]}>{time}</Text>
+                        </TouchableOpacity>
                     </Field>
                 </View>
+
+                {showDatePicker && (
+                    <DateTimePicker
+                        value={toDateObject(date, time)}
+                        mode="date"
+                        display={Platform.OS === "ios" ? "inline" : "default"}
+                        onChange={onChangeDate}
+                    />
+                )}
+
+                {showTimePicker && (
+                    <DateTimePicker
+                        value={toDateObject(date, time)}
+                        mode="time"
+                        is24Hour
+                        display={Platform.OS === "ios" ? "spinner" : "default"}
+                        onChange={onChangeTime}
+                    />
+                )}
 
                 {/* 4. Selector de Prioridad (Baja, Media, Alta) */}
                 <View style={styles.fieldset}>
@@ -258,7 +301,7 @@ export function CreateTaskScreen({addTask, cancel}: CreateTaskScreenProps) {
 
                 {/* 7. Botones de acción inferiores */}
                 <Button full onClick={handleSubmit} style={styles.submitBtn}>
-                    + Agregar tarea
+                    {isEditing ? "Guardar cambios" : "+ Agregar tarea"}
                 </Button>
                 <Button variant="ghost" full onClick={cancel}>
                     Cancelar
@@ -433,5 +476,13 @@ const styles = StyleSheet.create({
     },
     submitBtn: {
         marginBottom: 8,
+    },
+    pickerBtn: {
+        flex: 1,
+        justifyContent: "center",
+        paddingVertical: 12,
+    },
+    pickerText: {
+        fontSize: 15,
     },
 });

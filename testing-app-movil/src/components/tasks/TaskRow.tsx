@@ -1,5 +1,5 @@
 import React from "react";
-import {StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import {Alert, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {Task} from "../../types";
 import {isoDate, today, tomorrow} from "../../utils/dateUtils";
 import {useTheme} from "../../context/ThemeContext";
@@ -8,36 +8,38 @@ import {PriorityPill} from "./PriorityPill";
 
 type TaskRowProps = {
     task: Task;
-    toggle?: (id: number) => void; // Si se pasa, muestra el botón circular para completar la tarea
-    compact?: boolean; // Si es true, oculta la etiqueta y el botón de menú (usado en Calendario)
+    toggle?: (id: number) => void;
+    delete?: (id: number) => void;
+    edit?: (task: Task) => void; // NUEVO
+    compact?: boolean;
 };
 
-// Nombres cortos de los meses para formatear fechas de forma segura en cualquier teléfono
+
 const MONTHS_ES = [
     "ene", "feb", "mar", "abr", "may", "jun",
     "jul", "ago", "sep", "oct", "nov", "dic",
 ];
 
-/**
- * Convierte una fecha "AAAA-MM-DD" en "Hoy", "Mañana" o formato corto como "15 oct".
- */
 function formatTaskDate(dateStr: string): string {
     if (dateStr === isoDate(today)) return "Hoy";
     if (dateStr === isoDate(tomorrow)) return "Mañana";
 
     const parts = dateStr.split("-");
+
     if (parts.length === 3) {
         const monthIndex = Number(parts[1]) - 1;
         const day = Number(parts[2]);
+
         return `${day} ${MONTHS_ES[monthIndex] || ""}`;
     }
+
     return dateStr;
 }
 
-export function TaskRow({task, toggle, compact = false}: TaskRowProps) {
+export function TaskRow({task, toggle, delete: deleteTask, edit, compact = false}: TaskRowProps) {
+
     const {colors} = useTheme();
 
-    // Color del punto indicador cuando está en modo compacto (Calendario)
     const dotColor =
         task.priority === "Alta"
             ? "#EF4444"
@@ -110,6 +112,27 @@ export function TaskRow({task, toggle, compact = false}: TaskRowProps) {
                 <TouchableOpacity
                     style={styles.moreButton}
                     accessibilityLabel="Más opciones"
+                    onPress={() => {
+                        if (!deleteTask && !edit) return;
+
+                        const confirmDelete = () =>
+                            Alert.alert("Eliminar tarea", `¿Eliminar "${task.title}"?`, [
+                                {text: "Cancelar", style: "cancel"},
+                                {
+                                    text: "Eliminar",
+                                    style: "destructive",
+                                    onPress: () => deleteTask?.(task.id),
+                                },
+                            ]);
+
+                        Alert.alert(task.title, "¿Qué deseas hacer?", [
+                            ...(edit ? [{text: "Editar", onPress: () => edit(task)}] : []),
+                            ...(deleteTask
+                                ? [{text: "Eliminar", style: "destructive" as const, onPress: confirmDelete}]
+                                : []),
+                            {text: "Cancelar", style: "cancel" as const},
+                        ]);
+                    }}
                 >
                     <Icon name="more" size={18} color={colors.subtext}/>
                 </TouchableOpacity>

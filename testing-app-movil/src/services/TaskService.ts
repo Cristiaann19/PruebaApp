@@ -81,7 +81,39 @@ export async function toggleTaskInServer(
     return await response.json();
 }
 
-// 4. Eliminar una tarea
+// 4. Actualizar una tarea existente
+export async function updateTaskInServer(
+    id: number,
+    data: Omit<Task, "id">
+): Promise<Task> {
+    if (id == null || !Number.isInteger(id) || id <= 0) {
+        throw new Error(`ID de tarea inválido: ${id}`);
+    }
+
+    const url = `${API_URL}/${id}`;
+
+    console.log("Actualizando tarea:", { id, url });
+
+    const response = await fetch(url, {
+        method: "PUT",
+        headers: await authHeaders({
+            "Content-Type": "application/json",
+        }),
+        body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+
+        throw new Error(
+            `Error al actualizar la tarea. HTTP ${response.status}: ${errorText}`
+        );
+    }
+
+    return await response.json();
+}
+
+// 5. Eliminar una tarea
 export async function deleteTaskFromServer(
     id: number
 ): Promise<boolean> {

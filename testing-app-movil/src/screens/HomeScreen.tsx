@@ -1,30 +1,27 @@
 import React, { useState } from "react";
-import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-} from "react-native";
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Screen, Task } from "../types";
 import { useTheme } from "../context/ThemeContext";
 import { Icon } from "../components/common/Icon";
 import { BottomNav } from "../components/layout/BottomNav";
 import { TaskRow } from "../components/tasks/TaskRow";
+import { User } from "../types";
 
 type HomeScreenProps = {
     tasks: Task[];
+    userName?: string;
     navigate: (screen: Screen) => void;
     toggle: (id: number) => void;
+    delete: (id: number) => void;
+    edit: (task: Task) => void;
 };
 
 type FilterType = "Todas" | "Pendientes" | "Completadas";
 
-export function HomeScreen({ tasks, navigate, toggle }: HomeScreenProps) {
-    // Conectamos los colores dinámicos del Modo Claro / Oscuro
+export function HomeScreen({ tasks, userName, navigate, toggle, delete: deleteTask, edit }: HomeScreenProps) {
     const { colors } = useTheme();
-
     const [filter, setFilter] = useState<FilterType>("Todas");
+    const [search, setSearch] = useState("");
 
     // Cálculos en tiempo real del progreso
     const completedCount = tasks.filter((task) => task.completed).length;
@@ -33,11 +30,19 @@ export function HomeScreen({ tasks, navigate, toggle }: HomeScreenProps) {
         (completedCount / Math.max(totalCount, 1)) * 100
     );
 
-    // Filtrado de tareas según la pestaña activa
+    const query = search.trim().toLowerCase();
+
     const filteredTasks = tasks.filter((task) => {
-        if (filter === "Todas") return true;
-        if (filter === "Completadas") return task.completed;
-        return !task.completed;
+        const matchesFilter =
+            filter === "Todas" ||
+            (filter === "Completadas" ? task.completed : !task.completed);
+
+        const matchesSearch =
+            query === "" ||
+            task.title.toLowerCase().includes(query) ||
+            (task.description ?? "").toLowerCase().includes(query);
+
+        return matchesFilter && matchesSearch;
     });
 
     return (
@@ -52,7 +57,7 @@ export function HomeScreen({ tasks, navigate, toggle }: HomeScreenProps) {
                     <View>
                         <Text style={styles.overline}>MI DÍA</Text>
                         <Text style={[styles.greeting, { color: colors.text }]}>
-                            Hola, Cristian 👋
+                            Hola, {userName ? userName.split(" ")[0] : ""} 👋
                         </Text>
                         <Text style={[styles.subtitle, { color: colors.subtext }]}>
                             Aquí tienes tus tareas de hoy
@@ -152,6 +157,22 @@ export function HomeScreen({ tasks, navigate, toggle }: HomeScreenProps) {
                         </Text>
                     </View>
 
+                    <View style={[styles.searchBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                        <TextInput
+                            style={[styles.searchInput, { color: colors.text }]}
+                            value={search}
+                            onChangeText={setSearch}
+                            placeholder="Buscar tareas..."
+                            placeholderTextColor={colors.subtext}
+                            returnKeyType="search"
+                        />
+                        {search !== "" && (
+                            <TouchableOpacity onPress={() => setSearch("")} accessibilityLabel="Limpiar búsqueda">
+                                <Text style={{ color: colors.subtext, fontSize: 16 }}>✕</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+
                     <View style={styles.filtersRow}>
                         {(["Todas", "Pendientes", "Completadas"] as const).map((item) => {
                             const isActive = filter === item;
@@ -187,6 +208,8 @@ export function HomeScreen({ tasks, navigate, toggle }: HomeScreenProps) {
                                     key={task.id !== undefined ? String(task.id) : `task-${index}`}
                                     task={task}
                                     toggle={toggle}
+                                    delete={deleteTask}
+                                    edit={edit}
                                 />
                             ))
                         ) : (
@@ -200,10 +223,10 @@ export function HomeScreen({ tasks, navigate, toggle }: HomeScreenProps) {
                                     <Icon name="check" size={28} color="#6254F5" />
                                 </View>
                                 <Text style={[styles.emptyTitle, { color: colors.text }]}>
-                                    Todo despejado
+                                    {query ? "No se encontraron tareas" : "Todo despejado"}
                                 </Text>
                                 <Text style={[styles.emptySubtitle, { color: colors.subtext }]}>
-                                    No hay tareas en esta vista.
+                                    {query ? "Prueba con otra palabra." : "No hay tareas en esta vista."}
                                 </Text>
                             </View>
                         )}
@@ -428,5 +451,19 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.35,
         shadowRadius: 8,
+    },
+
+    searchBox: {
+        flexDirection: "row",
+        alignItems: "center",
+        borderWidth: 1,
+        borderRadius: 14,
+        paddingHorizontal: 14,
+        marginBottom: 12,
+    },
+    searchInput: {
+        flex: 1,
+        fontSize: 15,
+        paddingVertical: 10,
     },
 });

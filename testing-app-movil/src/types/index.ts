@@ -6,6 +6,7 @@ export type Screen =
     | "login"
     | "home"
     | "create"
+    | "edit"
     | "calendar"
     | "stats"
     | "settings";
@@ -35,7 +36,7 @@ export interface Task {
     date: string;
     time: string;
     priority: Priority;
-    category: string;
+    category: Category;
     completed: boolean;
     repeat: boolean;
 }
